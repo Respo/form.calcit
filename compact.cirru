@@ -1,52 +1,149 @@
 
-{} (:package |app)
-  :configs $ {} (:init-fn |app.main/main!) (:reload-fn |app.main/reload!) (:version |0.0.1)
-    :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/
+{} (:package |form)
+  :configs $ {} (:init-fn |form.main/main!) (:reload-fn |form.main/reload!) (:version |0.0.1)
+    :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |alerts.calcit/
   :entries $ {}
   :files $ {}
-    |app.comp.container $ {}
+    |form.comp.container $ {}
       :defs $ {}
         |comp-container $ quote
           defcomp comp-container (reel)
             let
                 store $ :store reel
                 states $ :states store
-                cursor $ or (:cursor states) ([])
+                cursor $ or (:cursor states)
+                    "\"\""
+                    "\"\""
+                    "\"\""
+                    "\"\""
                 state $ or (:data states)
                   {} $ :content "\""
               div
                 {} $ :style (merge ui/global ui/row)
-                textarea $ {}
-                  :value $ :content state
-                  :placeholder "\"Content"
-                  :style $ merge ui/expand ui/textarea
-                    {} $ :height 320
-                  :on-input $ fn (e d!)
-                    d! cursor $ assoc state :content (:value e)
-                =< 8 nil
-                div
-                  {} $ :style ui/expand
-                  comp-md "|This is some content with `code`"
-                  =< |8px nil
-                  button $ {} (:style ui/button) (:inner-text "\"Run")
-                    :on-click $ fn (e d!)
-                      println $ :content state
+                comp-form (>> states :form-example) items ({})
+                  fn (form) (println "\"form" form)
+                  {} $ :on-cancel
+                    fn () $ println "\"cancel"
                 when dev? $ comp-reel (>> states :reel) reel ({})
+        |items $ quote
+          def items $ []
+            {} (:type :input) (:label "\"Name") (:name :name) (:required? true) (:placeholder "\"a name")
+            {} (:type :input) (:label "\"Place") (:name :place) (:placeholder "\"a name")
+            {} (:type :select-popup) (:name :kind) (:label "\"Kind") (:placeholder "\"Nothing selected")
+              :options $ []
+                {} (:value :a) (:title "\"A")
+                {} (:value :b) (:title "\"B")
+            {} (:type :custom) (:name :custom) (:label "\"Counter")
+              :render $ fn (value item modify-form! state)
+                div
+                  {}
+                    :style $ {} (:cursor :pointer) (:padding "\"0px 8px")
+                      :background-color $ hsl 0 0 90
+                    :on-click $ fn (e d!)
+                      modify-form! d! $ {}
+                          :name item
+                          inc value
+                  <> $ or value 0
       :ns $ quote
-        ns app.comp.container $ :require (respo-ui.core :as ui)
+        ns form.comp.container $ :require (respo-ui.core :as ui)
+          respo-ui.core :refer $ hsl
           respo.core :refer $ defcomp defeffect <> >> div button textarea span input
           respo.comp.space :refer $ =<
           reel.comp.reel :refer $ comp-reel
           respo-md.comp.md :refer $ comp-md
-          app.config :refer $ dev?
-    |app.config $ {}
+          form.config :refer $ dev?
+          form.core :refer $ comp-form
+    |form.config $ {}
       :defs $ {}
         |dev? $ quote
           def dev? $ = "\"dev" (get-env "\"mode" "\"release")
         |site $ quote
           def site $ {} (:storage-key "\"workflow")
-      :ns $ quote (ns app.config)
-    |app.main $ {}
+      :ns $ quote (ns form.config)
+    |form.core $ {}
+      :defs $ {}
+        |comp-form $ quote
+          defcomp comp-form (states items form0 on-change options)
+            let
+                cursor $ :cursor states
+                state $ or (:data states) form0
+                modify-form! $ fn (d! pairs)
+                  let
+                      new-form $ merge state pairs
+                    d! cursor new-form
+              div ({})
+                list-> ({})
+                  -> items $ map-indexed
+                    fn (idx item)
+                      [] idx $ div
+                        {} $ :style
+                          merge ui/row $ {} (:padding 8)
+                        render-label item
+                        case (:type item)
+                          :input $ render-input
+                            get state $ :name item
+                            , item modify-form!
+                          :select-popup $ render-select-popup states cursor
+                            get state $ :name item
+                            , item modify-form!
+                          :custom $ render-custom state item modify-form!
+                          <> $ str "\"Unknown type " (:type item)
+                div
+                  {} $ :style ui/row-center
+                  button $ {} (:style ui/button) (:inner-text "\"Cancel")
+                    :on-click $ fn (e d!)
+                        :on-cancel options
+                  =< 8 nil
+                  button $ {} (:style ui/button) (:inner-text "\"Submit")
+                    :on-click $ fn (e d!) (on-change state)
+        |render-custom $ quote
+          defn render-custom (state item modify-form!)
+            let
+                render $ :render item
+                value $ get state (:name item)
+              render value item modify-form! state
+        |render-input $ quote
+          defn render-input (value item modify-form!)
+            input $ {} (:style ui/input)
+              :placeholder $ :placeholder item
+              :value value
+              :on-input $ fn (e d!)
+                modify-form! d! $ {}
+                    :name item
+                    :value e
+        |render-label $ quote
+          defn render-label (item)
+            div
+              {} $ :style
+                {} $ :width 100
+              <> $ :label item
+              if (:required? item)
+                <> "\"*" $ {}
+        |render-select-popup $ quote
+          defn render-select-popup (states cursor value item modify-form!)
+            let
+                options $ -> (:options item)
+                  map $ fn (option)
+                    {}
+                      :value $ :value option
+                      :display $ :title option
+                select-plugin $ use-modal-menu (>> states :select)
+                  {} (:title "\"Select") (:items options)
+                    :on-result $ fn (item d!)
+                      modify-form! d! $ {}
+                        :name $ :title item
+                        :value $ :value item
+              div ({})
+                span $ {} (:inner-text "\"TODO")
+                  :on-click $ fn (e d!) (.show select-plugin d!)
+                .render select-plugin
+      :ns $ quote
+        ns form.core $ :require
+          respo.core :refer $ defcomp >> list-> <> div button textarea span input
+          respo-ui.core :as ui
+          respo.comp.space :refer $ =<
+          respo-alerts.core :refer $ use-modal-menu
+    |form.main $ {}
       :defs $ {}
         |*reel $ quote
           defatom *reel $ -> reel-schema/reel (assoc :base schema/store) (assoc :store schema/store)
@@ -86,25 +183,25 @@
         |render-app! $ quote
           defn render-app! () $ render! mount-target (comp-container @*reel) dispatch!
       :ns $ quote
-        ns app.main $ :require
+        ns form.main $ :require
           respo.core :refer $ render! clear-cache!
-          app.comp.container :refer $ comp-container
-          app.updater :refer $ updater
-          app.schema :as schema
+          form.comp.container :refer $ comp-container
+          form.updater :refer $ updater
+          form.schema :as schema
           reel.util :refer $ listen-devtools!
           reel.core :refer $ reel-updater refresh-reel
           reel.schema :as reel-schema
-          app.config :as config
+          form.config :as config
           "\"./calcit.build-errors" :default build-errors
           "\"bottom-tip" :default hud!
-    |app.schema $ {}
+    |form.schema $ {}
       :defs $ {}
         |store $ quote
           def store $ {}
             :states $ {}
               :cursor $ []
-      :ns $ quote (ns app.schema)
-    |app.updater $ {}
+      :ns $ quote (ns form.schema)
+    |form.updater $ {}
       :defs $ {}
         |updater $ quote
           defn updater (store op data op-id op-time)
@@ -113,5 +210,5 @@
               :states $ update-states store data
               :hydrate-storage data
       :ns $ quote
-        ns app.updater $ :require
+        ns form.updater $ :require
           respo.cursor :refer $ update-states
