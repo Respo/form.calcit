@@ -11,24 +11,20 @@
             let
                 store $ :store reel
                 states $ :states store
-                cursor $ or (:cursor states)
-                    "\"\""
-                    "\"\""
-                    "\"\""
-                    "\"\""
-                state $ or (:data states)
+                cursor $ either (:cursor states) ([])
+                state $ either (:data states)
                   {} $ :content "\""
               div
                 {} $ :style (merge ui/global ui/row)
-                comp-form (>> states :form-example) items ({})
+                comp-form (>> states :form-example) form-items ({})
                   fn (form) (println "\"form" form)
                   {} $ :on-cancel
                     fn () $ println "\"cancel"
                 when dev? $ comp-reel (>> states :reel) reel ({})
-        |items $ quote
-          def items $ []
+        |form-items $ quote
+          def form-items $ []
             {} (:type :input) (:label "\"Name") (:name :name) (:required? true) (:placeholder "\"a name")
-            {} (:type :input) (:label "\"Place") (:name :place) (:placeholder "\"a name")
+            {} (:type :input) (:label "\"Place") (:name :place) (:placeholder "\"a place")
             {} (:type :select-popup) (:name :kind) (:label "\"Kind") (:placeholder "\"Nothing selected")
               :options $ []
                 {} (:value :a) (:title "\"A")
@@ -62,22 +58,24 @@
       :ns $ quote (ns form.config)
     |form.core $ {}
       :defs $ {}
-        |%form-record $ quote (defrecord %form-record :fields :reset!)
+        |%form-record $ quote (defrecord %form-record :get :render :reset)
         |comp-form $ quote
           defcomp comp-form (states items form0 on-change options)
             let
                 cursor $ :cursor states
                 state $ or (:data states) form0
-                form-plugin $ use-form states items
-              div ({}) (:fields form-plugin)
+                form-plugin $ use-form (>> states :items) items
+              div ({}) (.render form-plugin)
                 div
                   {} $ :style ui/row-center
                   button $ {} (:style ui/button) (:inner-text "\"Cancel")
                     :on-click $ fn (e d!)
-                        :on-cancel options
+                      do (.reset form-plugin d!)
+                          :on-cancel options
                   =< 8 nil
                   button $ {} (:style ui/button) (:inner-text "\"Submit")
-                    :on-click $ fn (e d!) (on-change state)
+                    :on-click $ fn (e d!)
+                      on-change $ .get form-plugin
         |css-close-icon $ quote
           defstyle css-close-icon $ {}
             "\"$0" $ {} (:opacity 0.3) (:cursor :pointer)
@@ -113,6 +111,7 @@
                     {}
                       :value $ :value option
                       :display $ :title option
+                placeholder $ either (:placeholder item) "\"To select..."
                 select-plugin $ use-modal-menu (>> states :select)
                   {} (:title "\"Select") (:items options)
                     :on-result $ fn (result d!)
@@ -127,6 +126,7 @@
                       :border-radius "\"3px"
                       :cursor :pointer
                       :display :inline-block
+                      :min-width 80
                     :on-click $ fn (e d!) (.show select-plugin d!)
                   if (some? value)
                     div
@@ -138,9 +138,10 @@
                           modify-form! d! $ {}
                               :name item
                               , nil
-                    <> "\"-" $ {}
+                    <> placeholder $ {}
                       :color $ hsl 0 0 80
                       :font-family ui/font-fancy
+                      :font-style :italic
                 .render select-plugin
         |use-form $ quote
           defn use-form (states form-items)
@@ -151,8 +152,15 @@
                   let
                       new-form $ merge state pairs
                     d! cursor new-form
-              %{} %form-record
-                :fields $ list-> ({})
+              ::
+                %{} %form-record
+                  :get $ fn (self)
+                    -> self (nth 1) (nth 0)
+                  :render $ fn (self)
+                    -> self (nth 1) (nth 1)
+                  :reset $ fn (self d! ? data)
+                    d! cursor $ either data ({})
+                [] state $ list-> ({})
                   -> form-items $ map-indexed
                     fn (idx item)
                       [] idx $ div
@@ -168,8 +176,6 @@
                             get state $ :name item
                             , item modify-form!
                           :custom $ render-custom state item modify-form!
-                :reset! $ fn (data d!)
-                  d! cursor $ {}
       :ns $ quote
         ns form.core $ :require
           respo.core :refer $ defcomp >> list-> <> div button textarea span input
