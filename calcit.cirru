@@ -61,7 +61,7 @@
                           :on-click $ fn (e d!)
                             modify-form! d! $ {}
                               :name $ :name typed-item
-                              :value $ inc value
+                              :value $ inc (or value 0)
                         <> $ or value 0
           :examples $ []
           :schema $ :: 'List 'form.schema/FormItem

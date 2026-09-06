@@ -29,7 +29,7 @@ def form-items $ []
           :on-click $ fn (e d!)
             modify-form! d! $ {}
               :name $ :name item
-              :value $ inc value
+              :value $ inc $ or value 0
         <> $ or value 0
 ```
 
