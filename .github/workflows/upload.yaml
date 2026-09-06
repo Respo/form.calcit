@@ -48,20 +48,11 @@ jobs:
         calcit calcit.cirru js
         yarn vite build --base=./
 
-    - name: Install verified rsync
+    - name: Verify runner rsync
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         set -euo pipefail
-        curl --fail --location --silent --show-error \
-          --output "$RUNNER_TEMP/rsync.tar.gz" \
-          https://download.samba.org/pub/rsync/src/rsync-3.5.0.tar.gz
-        echo "c7ffd1ef653e99540f661e47cb00b7f9cad1ee6b972399b16f93d672656e0d33  $RUNNER_TEMP/rsync.tar.gz" | sha256sum --check --strict
-        tar -xzf "$RUNNER_TEMP/rsync.tar.gz" -C "$RUNNER_TEMP"
-        cd "$RUNNER_TEMP/rsync-3.5.0"
-        ./configure --prefix="$RUNNER_TEMP/rsync-install" --disable-acl-support --disable-lz4 --disable-openssl --disable-xattr-support --disable-xxhash --disable-zstd
-        make -j2
-        make install
-        echo "$RUNNER_TEMP/rsync-install/bin" >> "$GITHUB_PATH"
+        /usr/bin/rsync --version
 
     - name: Configure verified SSH host
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -79,6 +70,6 @@ jobs:
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
         set -euo pipefail
-        rsync -avzr --progress \
+        /usr/bin/rsync -avzr --progress \
           -e "ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts" \
           dist/* "rsync-user@tiye.me:/web-assets/repo/${{ github.repository }}"
