@@ -30,7 +30,7 @@ jobs:
     - uses: calcit-lang/setup-calcit@704b3f5cd6f9ce3bd1e0c926dbdd1d181adb8180 # v1.4.0
       with:
         tools: calcit,caps
-        caps-version: "0.1.0"
+        caps-version: "0.1.1"
 
     - name: Validate Calcit project
       run: |
@@ -40,7 +40,22 @@ jobs:
         calcit calcit.cirru edit format
         git diff --exit-code -- calcit.cirru
         calcit calcit.cirru --check-only
+        calcit calcit.cirru analyze check-public \
+          --ns form.comp.container \
+          --ns form.config \
+          --ns form.core \
+          --ns form.main \
+          --ns form.schema \
+          --ns form.types \
+          --ns form.updater \
+          --summary-only
+        calcit calcit.cirru analyze check-types --summary-only
+        calcit calcit.cirru analyze weak-types \
+          --only schema-dynamic,unresolved-type-slot,code-dynamic \
+          --intent unresolved \
+          --summary-only
         calcit calcit.cirru analyze dynamic-methods --max 0
+        calcit calcit.cirru analyze deprecated --summary-only
         calcit calcit.cirru analyze quality --baseline config/calcit-quality.cirru
 
     - name: Build web assets
