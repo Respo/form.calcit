@@ -163,7 +163,7 @@
           :code $ quote $ defn form-plugin-reset (self d! data)
             match self
               (:form state rendered cursor)
-                d! $ :: :states cursor $ option:unwrap-or data
+                d! $ %:: form.types/Op :states cursor $ option:unwrap-or data
                   assert-type ({}) (:: 'Map 'Tag 'Dynamic)
               _ $ raise |Invalid-form-plugin
           :examples $ []
@@ -284,7 +284,7 @@
                 modify-form! $ fn (d! pairs)
                   let
                       new-form $ merge state $ assert-type pairs (:: 'Map 'Tag 'Dynamic)
-                    d! $ :: :states cursor new-form
+                    d! $ %:: form.types/Op :states cursor new-form
                 rendered $ list-> ({})
                   map-indexed form-items $ fn (idx raw-item)
                     let
@@ -351,11 +351,13 @@
             match
               browser/storage-get $ :storage-key config/site
               (:some raw)
-                match
-                  types/decode-store $ parse-cirru-edn raw
-                  (:some stored)
-                    dispatch! $ types/Op :hydrate-storage stored
-                  (:none) (hud! |error |Ignored_invalid_saved_state)
+                match (try-parse-cirru-edn raw)
+                  (:ok parsed)
+                    match (types/decode-store parsed)
+                      (:some stored)
+                        dispatch! $ types/Op :hydrate-storage stored
+                      (:none) (hud! |error |Ignored_invalid_saved_state)
+                  (:err error) (hud! |error |Ignored_invalid_saved_state)
               (:none) &unit
             println |App_started.
           :examples $ []
@@ -365,9 +367,7 @@
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target (js/document.querySelector |.app)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ :: 'JsObject
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
