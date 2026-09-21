@@ -5,7 +5,7 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'form.main/main!) (:mode :js) (:reload-fn 'form.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |respo.calcit/ |lilac/ |memof/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |alerts.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |alerts.calcit/
       :type-slots $ {}
   :files $ {}
     'form.comp.container $ %{} 'FileEntry
@@ -19,8 +19,7 @@
                 {} $ :style $ merge ui/global ui/row
                 comp-form (>> states :form-example) form-items ({})
                   fn (form) (println |form form)
-                  %{} FormOptions $ :on-cancel $ %some
-                    fn () $ println |cancel
+                  FormOptions :on-cancel $ %some $ fn () (println |cancel)
                 when dev? $ comp-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -28,39 +27,21 @@
         'form-items $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def form-items
             []
-              %{} FormItem (:type :input) (:name :name) (:label |Name)
-                :required? $ %some true
-                :placeholder $ %some "|a name"
-                :options $ %none
-                :render $ %none
-              %{} FormItem (:type :input) (:name :place) (:label |Place)
-                :required? $ %none
-                :placeholder $ %some "|a place"
-                :options $ %none
-                :render $ %none
-              %{} FormItem (:type :select-popup) (:name :kind) (:label |Kind)
-                :required? $ %none
-                :placeholder $ %some "|Nothing selected"
-                :render $ %none
-                :options $ %some $ []
-                  %{} FormOption (:value :a) (:title |A)
-                  %{} FormOption (:value :b) (:title |B)
-              %{} FormItem (:type :custom) (:name :custom) (:label |Counter)
-                :required? $ %none
-                :placeholder $ %none
-                :options $ %none
-                :render $ %some $ fn (value item modify-form! state)
-                  let
-                      typed-item $ assert-type item 'form.schema/FormItem
-                    div
-                      {}
-                        :style $ {} (:cursor :pointer) (:padding "|0px 8px")
-                          :background-color $ hsl 0 0 90
-                        :on-click $ fn (e d!)
-                          modify-form! d! $ {}
-                            :name $ :name typed-item
-                            :value $ inc $ or value 0
-                      <> $ or value 0
+              FormItem :type :input :name :name :label |Name :required? (%some true) :placeholder (%some "|a name") :options (%none) :render $ %none
+              FormItem :type :input :name :place :label |Place :required? (%none) :placeholder (%some "|a place") :options (%none) :render $ %none
+              FormItem :type :select-popup :name :kind :label |Kind :required? (%none) :placeholder (%some "|Nothing selected") :render (%none) :options $ %some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
+              FormItem :type :custom :name :custom :label |Counter :required? (%none) :placeholder (%none) :options (%none) :render $ %some $ fn (value item modify-form! state)
+                let
+                    typed-item $ assert-type item 'form.schema/FormItem
+                  div
+                    {}
+                      :style $ {} (:cursor :pointer) (:padding "|0px 8px")
+                        :background-color $ hsl 0 0 90
+                      :on-click $ fn (e d!)
+                        modify-form! d! $ {}
+                          :name $ :name typed-item
+                          :value $ inc $ or value 0
+                    <> $ or value 0
           :examples $ []
           :schema $ :: 'List 'form.schema/FormItem
       :ns $ %{} 'NsEntry (:doc |)
@@ -90,9 +71,9 @@
     'form.core $ %{} 'FileEntry
       :defs $ {}
         '%form-plugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn %form-plugin (state rendered cursor) (%:: FormPlugin :form state rendered cursor)
+          :code $ quote $ defn %form-plugin (state rendered cursor) (FormPlugin :form state rendered cursor)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin)
+          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin0)
             :args $ [] (:: 'Map 'Tag 'Dynamic) 'respo.schema/Element $ :: 'List 'Dynamic
         'FormPlugin $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def FormPlugin (impl-traits FormPlugin0 FormPluginImpl)
@@ -123,8 +104,7 @@
                 div
                   {} $ :style ui/row-center
                   button $ {} (:style ui/button) (:inner-text |Cancel)
-                    :on-click $ fn (e d!)
-                      do (form-plugin-reset form-plugin d!) (on-cancel)
+                    :on-click $ fn (e d!) (form-plugin-reset form-plugin d!) (on-cancel)
                   =< 8 nil
                   button $ {} (:style ui/button) (:inner-text |Submit)
                     :on-click $ fn (e d!)
@@ -149,7 +129,7 @@
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'form.core/FormPlugin
+            :args $ [] 'form.core/FormPlugin0
             :return $ :: 'Map 'Tag 'Dynamic
         'form-plugin-render $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn form-plugin-render (self)
@@ -158,20 +138,20 @@
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'form.core/FormPlugin
+            :args $ [] 'form.core/FormPlugin0
         'form-plugin-reset $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn form-plugin-reset (self d! data)
             match self
               (:form state rendered cursor)
-                d! $ %:: form.types/Op :states cursor $ option:unwrap-or data
+                d! $ form.types/Op :states cursor $ option:unwrap-or data
                   assert-type ({}) (:: 'Map 'Tag 'Dynamic)
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'form.core/FormPlugin
+            :args $ [] 'form.core/FormPlugin0
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
-              :: 'Option $ :: 'Map 'Tag 'Dynamic
+              :: 'calcit.core/Option $ :: 'Map 'Tag 'Dynamic
         'render-custom $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-custom (state item modify-form!)
             let
@@ -271,7 +251,7 @@
                 .render select-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) (:: 'Option 'Dynamic) 'form.schema/FormItem $ :: 'Fn
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) (:: 'calcit.core/Option 'Dynamic) 'form.schema/FormItem $ :: 'Fn
               {} (:return 'Unit)
                 :args $ [] 'Fn $ :: 'Map 'Tag 'Dynamic
         'use-form $ %{} 'CodeEntry (:doc |)
@@ -284,7 +264,7 @@
                 modify-form! $ fn (d! pairs)
                   let
                       new-form $ merge state $ assert-type pairs (:: 'Map 'Tag 'Dynamic)
-                    d! $ %:: form.types/Op :states cursor new-form
+                    d! $ form.types/Op :states cursor new-form
                 rendered $ list-> ({})
                   map-indexed form-items $ fn (idx raw-item)
                     let
@@ -303,7 +283,7 @@
                           :custom $ render-custom state item modify-form!
               %form-plugin state rendered cursor
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin)
+          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin0)
             :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'form.schema/FormItem)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.core
@@ -365,9 +345,9 @@
             :args $ []
             :features $ #{} :js-ffi
         'mount-target $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def mount-target (js/document.querySelector |.app)
+          :code $ quote $ def mount-target respo-main/mount-target
           :examples $ []
-          :schema $ :: 'JsObject
+          :schema $ :: 'JsNullish 'respo.dom/DomElement
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
@@ -410,6 +390,7 @@
             js-ffi.browser :as browser
             js-ffi.shared :as shared
             form.types :as types
+            respo.main :as respo-main
     'form.schema $ %{} 'FileEntry
       :defs $ {}
         'FormItem $ %{} 'CodeEntry (:doc |)
@@ -484,7 +465,7 @@
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
             :features $ #{} :js-ffi
-            :return $ :: 'Option 'form.types/Store
+            :return $ :: 'calcit.core/Option 'form.types/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.types
     'form.updater $ %{} 'FileEntry
