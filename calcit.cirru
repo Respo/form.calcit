@@ -5,7 +5,7 @@
   :entries $ {} $ :default
     {} (:description |) (:init-fn 'form.main/main!) (:mode :js) (:reload-fn 'form.main/reload!) (:target :browser)
       :feature-policy $ {}
-      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |respo-markdown.calcit/ |reel.calcit/ |alerts.calcit/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |alerts.calcit/
       :type-slots $ {}
   :files $ {}
     'form.comp.container $ %{} 'FileEntry
@@ -19,18 +19,18 @@
                 {} $ :style $ merge ui/global ui/row
                 comp-form (>> states :form-example) form-items ({})
                   fn (form) (println |form form)
-                  FormOptions :on-cancel $ %some $ fn () (println |cancel)
-                when dev? $ comp-reel (>> states :reel) reel $ {}
+                  FormOptions :on-cancel $ Option :some $ fn () (println |cancel)
+                when dev? $ comp-typed-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
             :args $ [] $ :: 'reel.typed/State 'form.types/Op 'form.types/Store
         'form-items $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def form-items
             []
-              FormItem :type :input :name :name :label |Name :required? (%some true) :placeholder (%some "|a name") :options (%none) :render $ %none
-              FormItem :type :input :name :place :label |Place :required? (%none) :placeholder (%some "|a place") :options (%none) :render $ %none
-              FormItem :type :select-popup :name :kind :label |Kind :required? (%none) :placeholder (%some "|Nothing selected") :render (%none) :options $ %some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
-              FormItem :type :custom :name :custom :label |Counter :required? (%none) :placeholder (%none) :options (%none) :render $ %some $ fn (value item modify-form! state)
+              FormItem :type :input :name :name :label |Name :required? (Option :some true) :placeholder (Option :some "|a name") :options (Option :none) :render $ Option :none
+              FormItem :type :input :name :place :label |Place :required? (Option :none) :placeholder (Option :some "|a place") :options (Option :none) :render $ Option :none
+              FormItem :type :select-popup :name :kind :label |Kind :required? (Option :none) :placeholder (Option :some "|Nothing selected") :render (Option :none) :options $ Option :some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
+              FormItem :type :custom :name :custom :label |Counter :required? (Option :none) :placeholder (Option :none) :options (Option :none) :render $ Option :some $ fn (value item modify-form! state)
                 let
                     typed-item $ assert-type item 'form.schema/FormItem
                   div
@@ -50,8 +50,7 @@
             respo-ui.core :refer $ hsl
             respo.core :refer $ defcomp defeffect <> >> div button textarea span input
             respo.comp.space :refer $ =<
-            reel.comp.reel :refer $ comp-reel
-            respo-md.comp.md :refer $ comp-md
+            reel.comp.reel :refer $ comp-typed-reel
             form.config :refer $ dev?
             form.core :refer $ comp-form
             form.schema :refer $ FormItem FormOption FormOptions
@@ -71,9 +70,10 @@
     'form.core $ %{} 'FileEntry
       :defs $ {}
         '%form-plugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn %form-plugin (state rendered cursor) (FormPlugin :form state rendered cursor)
+          :code $ quote $ defn %form-plugin (state rendered cursor)
+            assert-type (%:: FormPlugin :form state rendered cursor) 'form.core/FormPlugin
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin0)
+          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin)
             :args $ [] (:: 'Map 'Tag 'Dynamic) 'respo.schema/Element $ :: 'List 'Dynamic
         'FormPlugin $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def FormPlugin (impl-traits FormPlugin0 FormPluginImpl)
@@ -95,7 +95,13 @@
         'comp-form $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defcomp comp-form (states items form0 on-change options)
             let
-                typed-states $ decode-map-as states form.schema/FormStates
+                typed-states $ decode-map-as
+                  if
+                    and (contains? states :data)
+                      some? $ option:unwrap $ get states :data
+                    select-keys states $ [] :cursor :data
+                    select-keys states $ [] :cursor
+                  , form.schema/FormStates
                 state $ option:unwrap-or (:data typed-states) form0
                 form-plugin $ use-form (>> states :items) items
                 on-cancel $ option:unwrap-or (:on-cancel options)
@@ -129,7 +135,7 @@
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {}
-            :args $ [] 'form.core/FormPlugin0
+            :args $ [] 'form.core/FormPlugin
             :return $ :: 'Map 'Tag 'Dynamic
         'form-plugin-render $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn form-plugin-render (self)
@@ -138,7 +144,7 @@
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] 'form.core/FormPlugin0
+            :args $ [] 'form.core/FormPlugin
         'form-plugin-reset $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn form-plugin-reset (self d! data)
             match self
@@ -148,10 +154,10 @@
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'form.core/FormPlugin0
+            :args $ [] 'form.core/FormPlugin
               :: 'Fn $ {} (:return 'Unit)
                 :args $ [] 'Dynamic
-              :: 'calcit.core/Option $ :: 'Map 'Tag 'Dynamic
+              :: 'Option $ :: 'Map 'Tag 'Dynamic
         'render-custom $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-custom (state item modify-form!)
             let
@@ -183,7 +189,7 @@
               :on-input $ fn (e d!)
                 modify-form! d! $ {}
                   :name $ :name item
-                  :value e
+                  :value $ option:unwrap $ get e :value
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Dynamic 'form.schema/FormItem $ :: 'Fn
@@ -209,19 +215,20 @@
                   map $ fn (option)
                     let
                         typed-option $ assert-type option 'form.schema/FormOption
-                      {}
-                        :value $ :value typed-option
-                        :display $ :title typed-option
+                      :: :item (:value typed-option) (:title typed-option)
                 placeholder $ option:unwrap-or (:placeholder item) "|To select..."
+                empty-selection nil
                 selected $ value .and-then $ fn (raw)
-                  if (nil? raw) (%none)
-                    %some $ decode-map-as raw SelectedOption
+                  if (nil? raw) (Option :none)
+                    Option :some $ decode-map-as raw SelectedOption
                 select-plugin $ use-modal-menu (>> states :select)
                   {} (:title |Select) (:items options)
                     :on-result $ fn (result d!)
                       modify-form! d! $ {}
                         :name $ :name item
-                        :value result
+                        :value $ if (nil? result) empty-selection $ match result
+                          (:item selected-value selected-label)
+                            {} (:value selected-value) (:display selected-label)
               div ({})
                 div
                   {}
@@ -243,7 +250,7 @@
                           :on-click $ fn (e d!)
                             modify-form! d! $ {}
                               :name $ :name item
-                              :value nil
+                              :value empty-selection
                     <> placeholder $ {}
                       :color $ hsl 0 0 80
                       :font-family ui/font-fancy
@@ -257,13 +264,21 @@
         'use-form $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-form (states form-items)
             let
-                typed-states $ decode-map-as states form.schema/FormStates
+                typed-states $ decode-map-as
+                  if
+                    and (contains? states :data)
+                      some? $ option:unwrap $ get states :data
+                    select-keys states $ [] :cursor :data
+                    select-keys states $ [] :cursor
+                  , form.schema/FormStates
                 cursor $ :cursor typed-states
                 state $ option:unwrap-or (:data typed-states)
                   assert-type ({}) (:: 'Map 'Tag 'Dynamic)
                 modify-form! $ fn (d! pairs)
                   let
-                      new-form $ merge state $ assert-type pairs (:: 'Map 'Tag 'Dynamic)
+                      new-form $ assoc state
+                        option:unwrap $ get pairs :name
+                        option:unwrap $ get pairs :value
                     d! $ form.types/Op :states cursor new-form
                 rendered $ list-> ({})
                   map-indexed form-items $ fn (idx raw-item)
@@ -283,7 +298,7 @@
                           :custom $ render-custom state item modify-form!
               %form-plugin state rendered cursor
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin0)
+          :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin)
             :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'form.schema/FormItem)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.core
@@ -457,10 +472,10 @@
               match (get data :states)
                 (:some states)
                   if (map? states)
-                    %some $ Store :states $ assert-type states 'Map
-                    %none
-                (:none) (%none)
-              %none
+                    Option :some $ Store :states $ assert-type states 'Map
+                    Option :none
+                (:none) (Option :none)
+              Option :none
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
@@ -475,7 +490,7 @@
             match op
               (:states cursor data)
                 assoc store :states $ assert-type
-                  update-states (:states store) cursor data
+                  update-state-tree (:states store) cursor data
                   , 'Map
               (:hydrate-storage data) data
           :examples $ []
@@ -483,4 +498,4 @@
             :args $ [] 'form.types/Store 'form.types/Op 'String 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.updater
-          :require $ respo.cursor :refer $ update-states
+          :require $ respo.cursor :refer $ update-state-tree
