@@ -93,7 +93,7 @@ node --test scripts/form-regression.test.mjs
 
 CI uploads only frontend `dist` assets to COS, uses an absolute CDN base URL,
 and verifies public resources with cos-upload-action v1.2.0. PR asset paths use
-`pr/<number>/<run-id>/<attempt>/`; each PR and production queue separately.
+`pr/<number>/<run-id>/<attempt>/`; each PR has its own queue, separate from the production queue.
 The production prefix and original server rsync source/destination are unchanged.
 Public upload verification uses the action's existing `public-base-url`, without
 an additional checker. Missing PR credentials do not prove upload succeeded.
