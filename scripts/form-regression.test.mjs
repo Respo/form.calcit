@@ -8,7 +8,7 @@ import { decode_store } from '../js-out/form.types.mjs';
 import { updater } from '../js-out/form.updater.mjs';
 import { new_reel, record_op } from '../js-out/reel.typed.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
-import { component_$q_, component_tree } from '../js-out/respo.util.detect.mjs';
+import { component_$q_, component_tree, child_pair_value } from '../js-out/respo.util.detect.mjs';
 
 const t = clt.init_tags(['cursor', 'data', 'states', 'name', 'place', 'value', 'event', 'input', 'click', 'tree', 'children', 'some', 'none', 'custom', 'form-example', 'items']);
 const map = clt._$n__$M_;
@@ -36,7 +36,7 @@ function findEvent(node, tag, accept = () => true) {
     const childNodes = clt.option_$o_unwrap(children);
     const pairs = clt.list_$q_(childNodes) ? childNodes : clt.to_pairs(childNodes);
     for (let i = 0; i < clt.count(pairs); i++) {
-      const found = findEvent(nth(nth(pairs, i), 1), tag, accept);
+      const found = findEvent(child_pair_value(nth(pairs, i)), tag, accept);
       if (found) return found;
     }
   }
