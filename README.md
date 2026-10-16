@@ -2,11 +2,14 @@
 Respo Form
 ----
 
-### 0.0.5 迁移候选：使用者需要注意
+### 0.0.5：使用者需要注意
 
-候选配对正式 Calcit / `@calcit/procs` 0.30.0、Alerts 0.10.54、Reel 0.6.38、
+本版本配对正式 Calcit / `@calcit/procs` 0.30.0、Alerts 0.10.54、Reel 0.6.38、
 UI 0.7.40、Respo 0.16.120；消费者需协调相同的精确正式版本，不使用 alpha/hash。
-尚未发版，PR CI、审查及原 main 部署完成前，不把本地检查当作生产验收。
+此前公开 tag 只有 0.0.1，0.0.2–0.0.4 未发布 tag；从 0.0.1 升级还包含多年主线的
+累计 API 变化，需按本页和当前公开 schema 迁移，不能假定无需修改调用方。
+本轮迁移已通过 PR #13、精确 main CI 及原部署验收；Git tag/Release 发布状态
+以仓库 Releases 为准，不以版本字段或本地检查推断正式产物已经发布。
 
 字段名仍为 Tag，值和自定义 renderer 载荷仍允许异构数据；原空值、reset、选择菜单
 与 Clear 语义保持。renderer/修改函数保留参数顺序，dispatch 回调收紧为
