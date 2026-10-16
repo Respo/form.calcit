@@ -17,9 +17,11 @@
                 states $ :states store
               div
                 {} $ :style $ merge ui/global ui/row
-                comp-form (>> states :form-example) form-items ({})
-                  fn (form) (println |form form)
-                  FormOptions :on-cancel $ Option :some $ fn () (println |cancel)
+                comp-form
+                  decode-map-as (>> states :form-example) (:: 'Map 'Tag 'Dynamic)
+                  , form-items ({})
+                    fn (form) (println |form form)
+                    FormOptions :on-cancel $ Option :some $ fn () (println |cancel)
                 when dev? $ comp-typed-reel (>> states :reel) reel $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -31,17 +33,36 @@
               FormItem :type :input :name :place :label |Place :required? (Option :none) :placeholder (Option :some "|a place") :options (Option :none) :render $ Option :none
               FormItem :type :select-popup :name :kind :label |Kind :required? (Option :none) :placeholder (Option :some "|Nothing selected") :render (Option :none) :options $ Option :some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
               FormItem :type :custom :name :custom :label |Counter :required? (Option :none) :placeholder (Option :none) :options (Option :none) :render $ Option :some $ fn (value item modify-form! state)
+                hint-fn $ {}
+                  :args $ [] 'Dynamic 'form.schema/FormItem
+                    :: 'Fn $ {}
+                      :args $ []
+                        :: 'Fn $ {}
+                          :args $ [] 'Dynamic
+                          :return 'Unit
+                        :: 'Map 'Tag 'Dynamic
+                      :return 'Unit
+                    :: 'Map 'Tag 'Dynamic
+                  :return 'respo.schema/Element
                 let
-                    typed-item $ assert-type item 'form.schema/FormItem
+                    typed-item item
                   div
                     {}
                       :style $ {} (:cursor :pointer) (:padding "|0px 8px")
                         :background-color $ hsl 0 0 90
                       :on-click $ fn (e d!)
+                        hint-fn $ {}
+                          :args $ [] (:: 'Map 'Tag 'Dynamic)
+                            :: 'Fn $ {}
+                              :args $ [] 'Dynamic
+                              :return 'Unit
+                          :return 'Unit
                         modify-form! d! $ {}
                           :name $ :name typed-item
-                          :value $ inc $ or value 0
-                    <> $ or value 0
+                          :value $ let
+                              counter $ or value 0
+                            if (number? counter) (inc counter) (raise |invalid-counter-value)
+                    <> $ str $ or value 0
           :examples $ []
           :schema $ :: 'List 'form.schema/FormItem
       :ns $ %{} 'NsEntry (:doc |)
@@ -58,7 +79,9 @@
       :defs $ {}
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $
+              get-env |mode
+              , .unwrap-or |release
           :examples $ []
           :schema $ :: 'Bool
         'site $ %{} 'CodeEntry (:doc |)
@@ -70,8 +93,7 @@
     'form.core $ %{} 'FileEntry
       :defs $ {}
         '%form-plugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn %form-plugin (state rendered cursor)
-            assert-type (%:: FormPlugin :form state rendered cursor) 'form.core/FormPlugin
+          :code $ quote $ defn %form-plugin (state rendered cursor) (FormPlugin :form state rendered cursor)
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin)
             :args $ [] (:: 'Map 'Tag 'Dynamic) 'respo.schema/Element $ :: 'List 'Dynamic
@@ -98,22 +120,43 @@
                 typed-states $ decode-map-as
                   if
                     and (contains? states :data)
-                      some? $ option:unwrap $ get states :data
+                      non-nil? $
+                        get states :data
+                        , .unwrap
                     select-keys states $ [] :cursor :data
                     select-keys states $ [] :cursor
                   , form.schema/FormStates
-                state $ option:unwrap-or (:data typed-states) form0
-                form-plugin $ use-form (>> states :items) items
-                on-cancel $ option:unwrap-or (:on-cancel options)
-                  fn () &unit
+                state $
+                  :data typed-states
+                  , .unwrap-or form0
+                form-plugin $ use-form
+                  decode-map-as (>> states :items) (:: 'Map 'Tag 'Dynamic)
+                  , items
+                on-cancel $
+                  :on-cancel options
+                  , .unwrap-or $ fn () &unit
               div ({}) (form-plugin-render form-plugin)
                 div
                   {} $ :style ui/row-center
                   button $ {} (:style ui/button) (:inner-text |Cancel)
-                    :on-click $ fn (e d!) (form-plugin-reset form-plugin d!) (on-cancel)
+                    :on-click $ fn (e d!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
+                      form-plugin-reset form-plugin d!
+                      on-cancel
                   =< 8 nil
                   button $ {} (:style ui/button) (:inner-text |Submit)
                     :on-click $ fn (e d!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
                       on-change $ form-plugin-get form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Component)
@@ -149,8 +192,7 @@
           :code $ quote $ defn form-plugin-reset (self d! data)
             match self
               (:form state rendered cursor)
-                d! $ form.types/Op :states cursor $ option:unwrap-or data
-                  assert-type ({}) (:: 'Map 'Tag 'Dynamic)
+                d! $ form.types/Op :states cursor $ data .unwrap-or ({})
               _ $ raise |Invalid-form-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -164,44 +206,65 @@
                 value $ if-let
                   v $ get state $ :name item
                   , v nil
-                render $ option:unwrap-or (:render item)
-                  assert-type
-                    fn (value item modify-form! state)
-                      div ({}) (<> |Missing-custom-renderer)
-                    :: 'Fn $ {}
+                render $
+                  :render item
+                  , .unwrap-or $ fn (value item modify-form! state)
+                    hint-fn $ {}
                       :args $ [] 'Dynamic 'form.schema/FormItem
                         :: 'Fn $ {}
-                          :args $ [] 'Fn $ :: 'Map 'Tag 'Dynamic
+                          :args $ []
+                            :: 'Fn $ {}
+                              :args $ [] 'Dynamic
+                              :return 'Unit
+                            :: 'Map 'Tag 'Dynamic
                           :return 'Unit
                         :: 'Map 'Tag 'Dynamic
                       :return 'respo.schema/Element
+                    div ({}) (<> |Missing-custom-renderer)
               render value item modify-form! state
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] (:: 'Map 'Tag 'Dynamic) 'form.schema/FormItem $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] 'Fn $ :: 'Map 'Tag 'Dynamic
+                :args $ []
+                  :: 'Fn $ {} (:return 'Unit)
+                    :args $ [] 'Dynamic
+                  :: 'Map 'Tag 'Dynamic
         'render-input $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-input (value item modify-form!)
             input $ {} (:style ui/input)
-              :placeholder $ option:unwrap-or (:placeholder item) |
+              :placeholder $
+                :placeholder item
+                , .unwrap-or |
               :value value
               :on-input $ fn (e d!)
+                hint-fn $ {}
+                  :args $ [] (:: 'Map 'Tag 'Dynamic)
+                    :: 'Fn $ {}
+                      :args $ [] 'Dynamic
+                      :return 'Unit
+                  :return 'Unit
                 modify-form! d! $ {}
                   :name $ :name item
-                  :value $ option:unwrap $ get e :value
+                  :value $
+                    get e :value
+                    , .unwrap
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
             :args $ [] 'Dynamic 'form.schema/FormItem $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] 'Fn $ :: 'Map 'Tag 'Dynamic
+                :args $ []
+                  :: 'Fn $ {} (:return 'Unit)
+                    :args $ [] 'Dynamic
+                  :: 'Map 'Tag 'Dynamic
         'render-label $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-label (item)
             div
               {} $ :style $ {} (:width 100)
               <> $ :label item
               if
-                option:unwrap-or (:required? item) false
+                  :required? item
+                  , .unwrap-or false
                 <> |* $ {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
@@ -210,20 +273,34 @@
           :code $ quote $ defn render-select-popup (states cursor value item modify-form!)
             let
                 options $ ->
-                  option:unwrap-or (:options item)
-                    assert-type ([]) (:: 'List 'form.schema/FormOption)
+                    :options item
+                    , .unwrap-or $ []
                   map $ fn (option)
+                    hint-fn $ {}
+                      :args $ [] 'form.schema/FormOption
+                      :return 'Enum
                     let
-                        typed-option $ assert-type option 'form.schema/FormOption
+                        typed-option option
                       :: :item (:value typed-option) (:title typed-option)
-                placeholder $ option:unwrap-or (:placeholder item) "|To select..."
+                placeholder $
+                  :placeholder item
+                  , .unwrap-or "|To select..."
                 empty-selection nil
                 selected $ value .and-then $ fn (raw)
+                  hint-fn $ {}
+                    :args $ [] 'Dynamic
+                    :return $ :: 'Option 'form.schema/SelectedOption
                   if (nil? raw) (Option :none)
-                    Option :some $ decode-map-as raw SelectedOption
+                    Option :some $ decode-map-as raw 'form.schema/SelectedOption
                 select-plugin $ use-modal-menu (>> states :select)
                   {} (:title |Select) (:items options)
                     :on-result $ fn (result d!)
+                      hint-fn $ {}
+                        :args $ [] 'Dynamic $ :: 'Fn
+                          {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
                       modify-form! d! $ {}
                         :name $ :name item
                         :value $ if (nil? result) empty-selection $ match result
@@ -238,16 +315,30 @@
                       :cursor :pointer
                       :display :inline-block
                       :min-width 80
-                    :on-click $ fn (e d!) (.show select-plugin d!)
+                    :on-click $ fn (e d!)
+                      hint-fn $ {}
+                        :args $ [] (:: 'Map 'Tag 'Dynamic)
+                          :: 'Fn $ {}
+                            :args $ [] 'Dynamic
+                            :return 'Unit
+                        :return 'Unit
+                      .show select-plugin d!
+                      , &unit
                   if-let (raw-selected selected)
                     let
-                        selected-item $ assert-type raw-selected 'form.schema/SelectedOption
+                        selected-item raw-selected
                       div
                         {} $ :style ui/row
                         <> $ :display selected-item
                         =< 8 nil
                         span $ {} (:inner-text "|⨉") (:class-name css-close-icon)
                           :on-click $ fn (e d!)
+                            hint-fn $ {}
+                              :args $ [] (:: 'Map 'Tag 'Dynamic)
+                                :: 'Fn $ {}
+                                  :args $ [] 'Dynamic
+                                  :return 'Unit
+                              :return 'Unit
                             modify-form! d! $ {}
                               :name $ :name item
                               :value empty-selection
@@ -258,44 +349,66 @@
                 .render select-plugin
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'respo.schema/Element)
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) (:: 'calcit.core/Option 'Dynamic) 'form.schema/FormItem $ :: 'Fn
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Dynamic) (:: 'Option 'Dynamic) 'form.schema/FormItem $ :: 'Fn
               {} (:return 'Unit)
-                :args $ [] 'Fn $ :: 'Map 'Tag 'Dynamic
+                :args $ []
+                  :: 'Fn $ {} (:return 'Unit)
+                    :args $ [] 'Dynamic
+                  :: 'Map 'Tag 'Dynamic
         'use-form $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-form (states form-items)
             let
                 typed-states $ decode-map-as
                   if
                     and (contains? states :data)
-                      some? $ option:unwrap $ get states :data
+                      non-nil? $
+                        get states :data
+                        , .unwrap
                     select-keys states $ [] :cursor :data
                     select-keys states $ [] :cursor
                   , form.schema/FormStates
                 cursor $ :cursor typed-states
-                state $ option:unwrap-or (:data typed-states)
-                  assert-type ({}) (:: 'Map 'Tag 'Dynamic)
+                state $
+                  :data typed-states
+                  , .unwrap-or $ {}
                 modify-form! $ fn (d! pairs)
+                  hint-fn $ {}
+                    :args $ []
+                      :: 'Fn $ {}
+                        :args $ [] 'Dynamic
+                        :return 'Unit
+                      :: 'Map 'Tag 'Dynamic
+                    :return 'Unit
                   let
-                      new-form $ assoc state
-                        option:unwrap $ get pairs :name
-                        option:unwrap $ get pairs :value
+                      new-form $ let
+                          name $
+                            get pairs :name
+                            , .unwrap
+                        if (tag? name)
+                          assoc state name $
+                            get pairs :value
+                            , .unwrap
+                          raise |invalid-form-field-name
                     d! $ form.types/Op :states cursor new-form
                 rendered $ list-> ({})
                   map-indexed form-items $ fn (idx raw-item)
+                    hint-fn $ {}
+                      :args $ [] 'Number 'form.schema/FormItem
+                      :return $ :: 'List 'Dynamic
                     let
-                        item $ assert-type raw-item 'form.schema/FormItem
+                        item raw-item
                         item-value $ get state $ :name item
                       [] idx $ div
                         {} $ :style $ merge ui/row
                           {} $ :padding |8px
                         render-label item
-                        case-default (:type item)
-                          <> $ str |Unknown_type_ $ :type item
+                        match (:type item)
                           :input $ render-input
                             if-let (value item-value) value nil
                             , item modify-form!
                           :select-popup $ render-select-popup states cursor item-value item modify-form!
                           :custom $ render-custom state item modify-form!
+                          _ $ <> $ str |Unknown_type_ (:type item)
               %form-plugin state rendered cursor
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'form.core/FormPlugin)
@@ -313,23 +426,22 @@
     'form.main $ %{} 'FileEntry
       :defs $ {}
         '*reel $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *reel (typed/new-reel schema/store)
+          :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
           :schema $ :: 'Ref $ :: 'reel.typed/State 'form.types/Op 'form.types/Store
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ js/console.log |Dispatch: op
-            let
-                typed-op $ assert-type op 'Enum
-                control $ typed/decode-control typed-op
-              reset! *reel $ assert-type
-                match control
+            if (enum? op)
+              let
+                  control $ typed/decode-control op
+                reset! *reel $ match control
                   (:some action) (typed/apply-control updater @*reel action)
                   (:none)
-                    typed/record-op updater @*reel (assert-type typed-op 'form.types/Op) (generate-id!)
+                    typed/record-op updater @*reel (types/decode-op op) (generate-id!)
                       :timestamp $ shared/date-now-snapshot
-                :: 'reel.typed/State 'form.types/Op 'form.types/Store
-              , &unit
+                , &unit
+              raise |expected-form-action
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Dynamic
@@ -339,7 +451,7 @@
             println |Running_mode: $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             render-app!
-            add-watch *reel :changes $ fn (reel prev) (render-app!)
+            add-watch! *reel :changes $ fn (reel prev) (render-app!)
             listen-devtools! |k dispatch!
             browser/set-before-unload! $ fn (event) (persist-storage!)
             browser/set-interval! persist-storage! 60000
@@ -374,11 +486,12 @@
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (remove-watch *reel :changes) (clear-cache!)
-                add-watch *reel :changes $ fn (reel prev) (render-app!)
+              do (remove-watch! *reel :changes) (clear-cache!)
+                add-watch! *reel :changes $ fn (reel prev) (render-app!)
                 reset! *reel $ typed/refresh updater @*reel schema/store
                 hud! |ok~ |Ok
               hud! |error build-errors
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -417,7 +530,11 @@
               {}
                 :args $ [] 'Dynamic 'form.schema/FormItem
                   :: 'Fn $ {} (:return 'Unit)
-                    :args $ [] 'Fn $ :: 'Map 'Tag 'Dynamic
+                    :args $ []
+                      :: 'Fn $ {}
+                        :args $ [] 'Dynamic
+                        :return 'Unit
+                      :: 'Map 'Tag 'Dynamic
                   :: 'Map 'Tag 'Dynamic
                 :return 'respo.schema/Element
           :examples $ []
@@ -465,6 +582,21 @@
           :code $ quote $ defstruct Store (:states 'Map)
           :examples $ []
           :schema $ :: 'StructDef
+        'decode-op $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn decode-op (op)
+            if (enum? op)
+              match op
+                (:states cursor data)
+                  if (list? cursor) (Op :states cursor data) (raise |invalid-states-cursor)
+                (:hydrate-storage data)
+                  match (decode-store data)
+                    (:some store) (Op :hydrate-storage store)
+                    (:none) (raise |invalid-stored-form)
+                _ $ raise |unknown-form-action
+              raise |expected-form-action
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'form.types/Op)
+            :args $ [] 'Dynamic
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
@@ -479,8 +611,7 @@
           :examples $ []
           :schema $ :: 'Fn $ {}
             :args $ [] 'Dynamic
-            :features $ #{} :js-ffi
-            :return $ :: 'calcit.core/Option 'form.types/Store
+            :return $ :: 'Option 'form.types/Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.types
     'form.updater $ %{} 'FileEntry
@@ -489,7 +620,7 @@
           :code $ quote $ defn updater (store op op-id op-time)
             match op
               (:states cursor data)
-                assoc store :states $ assert-type
+                assoc store :states $ decode-map-as
                   update-state-tree (:states store) cursor data
                   , 'Map
               (:hydrate-storage data) data
