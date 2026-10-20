@@ -2,7 +2,24 @@
 Respo Form
 ----
 
-### 0.0.5：使用者需要注意
+### 当前源码：使用者需要注意
+
+本轮源码配对已发布的 Calcit / `@calcit/procs` `0.30.1-alpha.5`，并使用一致的
+正式依赖图：Alerts `0.10.56`、Reel `0.6.39`、UI `0.7.41`、Respo `0.16.122`，
+传递依赖统一到 Router `0.8.36` 与 JS-FFI `0.2.3`。Alerts 仍精确依赖 Reel
+`0.6.39`，因此不在根级混入 `0.6.40` 或未完成的 JS-FFI `0.2.4` 发布波次。
+源码、公开 API、异构字段、reset/Clear 语义、原 8 项回归和部署路径不变；
+不新增验证脚本、强转或改写规则，不放宽类型预算，不合并、不发版。
+已确认旧 quality 基线不被现有 CI、脚本或 strict 读取，故从当前树退役；原数据
+仍可从 `0.0.5` tag/Git 历史恢复。原实际门禁不减少，并用当前 `weak-types`
+直接落实 `unsafe=0` 硬门禁。27 项既有动态/空值边界保留，不把删除未使用的
+统计文件当作类型债务清零。
+
+这是预发布工具链验收，正式 `0.30.1` 当前尚无 macOS 二进制，不代表正式版的
+完整跨平台兼容保证。旧 `0.0.5` tag 保持原内容；模块版本字段仍为 `0.0.5`，
+不把它冒充新的已发布升级。历史版本的迁移影响见下文。
+
+### 0.0.5：历史升级影响
 
 本版本配对正式 Calcit / `@calcit/procs` 0.30.0、Alerts 0.10.54、Reel 0.6.38、
 UI 0.7.40、Respo 0.16.120；消费者需协调相同的精确正式版本，不使用 alpha/hash。
@@ -20,7 +37,9 @@ UI 0.7.40、Respo 0.16.120；消费者需协调相同的精确正式版本，不
 原 8 项 Node 回归保留全部断言，仅将树遍历适配为 Respo 公共 ChildPair 接口。
 项目无附带 native 测试，不宣称 native 套件通过。仍有开放 schema Dynamic，
 不能宣称静态闭合；旧 quality 数量命令退役后，CI 使用当前 strict、全量定义和
-原业务测试门禁，旧 `config/calcit-quality.cirru` 暂留审阅且没有扩容。
+原业务测试门禁。旧 `config/calcit-quality.cirru` 在 0.0.5 当时暂留审阅；
+本轮确认没有执行入口引用后将其退役；保留全部实际门禁，并落实 `unsafe=0`，
+没有扩容预算。
 
 Demo http://repo.respo-mvc.org/form.calcit/ .
 
@@ -115,7 +134,7 @@ comp-form (>> states :form-example) form-items ({})
 
 ### Workflow
 
-Calcit / `@calcit/procs` 0.30.0, Node.js 24, Yarn 4.18.0.
+Current source: Calcit / `@calcit/procs` 0.30.1-alpha.5, Node.js 24, Yarn 4.18.0.
 Only `calcit.cirru` and `deps.cirru` are maintained; retired snapshots are forbidden in CI.
 
 ```sh
@@ -136,8 +155,8 @@ The production prefix and original server rsync source/destination are unchanged
 Public upload verification uses the action's existing `public-base-url`, without
 an additional checker. Missing PR credentials do not prove upload succeeded.
 
-此前仅交付 COS/CDN 的主线仍为 0.27；旧 0.28 工作树保持原样，本候选独立迁移到
-0.30.0。重复/退役检查合并为当前入口，不新增脚本、concurrently 或 compiler fix 规则。
+此前仅交付 COS/CDN 的主线为 0.27；0.0.5 完成了 0.30.0 迁移，本轮在其基础上
+配对升级。旧工作树及未提交改动保持原样，不新增脚本、concurrently 或 compiler fix 规则。
 
 https://github.com/calcit-lang/respo-calcit-workflow
 
