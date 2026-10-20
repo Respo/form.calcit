@@ -80,7 +80,9 @@ def form-items $ []
         :args $ [] 'Dynamic 'form.schema/FormItem
           :: 'Fn $ {} (:return 'Unit)
             :args $ []
-              :: 'Fn $ {} (:args $ [] 'Dynamic) (:return 'Unit)
+              :: 'Fn $ {}
+                :args $ [] 'Dynamic
+                :return 'Unit
               :: 'Map 'Tag 'Dynamic
           :: 'Map 'Tag 'Dynamic
         :return 'respo.schema/Element
@@ -91,7 +93,9 @@ def form-items $ []
           :on-click $ fn (e d!)
             hint-fn $ {}
               :args $ [] (:: 'Map 'Tag 'Dynamic)
-                :: 'Fn $ {} (:args $ [] 'Dynamic) (:return 'Unit)
+                :: 'Fn $ {}
+                  :args $ [] 'Dynamic
+                  :return 'Unit
               :return 'Unit
             modify-form! d! $ {}
               :name $ :name item
@@ -118,7 +122,7 @@ use-form (>> states :items) items
 
 .reset form-plugin d!
 
-.reset form-plugin d! $ Option :some $ {} $ :name "|specified name"
+.reset form-plugin d! $ Option :some $ {} (:name "|specified name")
 ```
 
 ### Component style API
