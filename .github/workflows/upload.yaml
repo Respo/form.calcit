@@ -51,6 +51,7 @@ jobs:
         git diff --exit-code -- calcit.cirru
         calcit fix --workflow strict --verify --format edn
         calcit calcit.cirru --check-only --all-defs --format json
+        calcit calcit.cirru analyze weak-types --only unsafe-coerce --summary-only --format json | jq -e '.data.summary.hits == 0'
         calcit calcit.cirru analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
         calcit calcit.cirru analyze weak-types --only deprecated-call --summary-only --format json | jq -e '.data.summary.calls == 0'
 
