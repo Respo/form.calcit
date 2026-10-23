@@ -4,10 +4,10 @@ Respo Form
 
 ### 当前源码：使用者需要注意
 
-本轮源码配对已发布的 Calcit / `@calcit/procs` `0.30.1-alpha.5`，并使用一致的
-正式依赖图：Alerts `0.10.56`、Reel `0.6.39`、UI `0.7.41`、Respo `0.16.122`，
-传递依赖统一到 Router `0.8.36` 与 JS-FFI `0.2.3`。Alerts 仍精确依赖 Reel
-`0.6.39`，因此不在根级混入 `0.6.40` 或未完成的 JS-FFI `0.2.4` 发布波次。
+本轮源码配对正式 Calcit / `@calcit/procs` `0.30.1`，并使用一致的
+正式依赖图：Alerts `0.10.57`、Reel `0.6.41`、UI `0.8.0`、Respo `0.16.124`，
+传递依赖统一到 Router `0.8.37` 与 JS-FFI `0.2.5`。不使用 alpha、main 或 hash
+模块依赖；消费者升级时应协调同一组正式版本，不能仅替换根工具链。
 源码、公开 API、异构字段、reset/Clear 语义、原 8 项回归和部署路径不变；
 不新增验证脚本、强转或改写规则，不放宽类型预算，不合并、不发版。
 已确认旧 quality 基线不被现有 CI、脚本或 strict 读取，故从当前树退役；原数据
@@ -15,8 +15,8 @@ Respo Form
 直接落实 `unsafe=0` 硬门禁。27 项既有动态/空值边界保留，不把删除未使用的
 统计文件当作类型债务清零。
 
-这是预发布工具链验收，正式 `0.30.1` 当前尚无 macOS 二进制，不代表正式版的
-完整跨平台兼容保证。旧 `0.0.5` tag 保持原内容；模块版本字段仍为 `0.0.5`，
+正式图通过 Linux CI 验收，不使用本地旧 CLI 编译正式依赖图，不将单平台验收
+当作完整跨平台兼容保证。旧 `0.0.5` tag 保持原内容；模块版本字段仍为 `0.0.5`，
 不把它冒充新的已发布升级。历史版本的迁移影响见下文。
 
 ### 0.0.5：历史升级影响
@@ -138,7 +138,7 @@ comp-form (>> states :form-example) form-items ({})
 
 ### Workflow
 
-Current source: Calcit / `@calcit/procs` 0.30.1-alpha.5, Node.js 24, Yarn 4.18.0.
+Current source: formal Calcit / `@calcit/procs` 0.30.1, Node.js 24, Yarn 4.18.0.
 Only `calcit.cirru` and `deps.cirru` are maintained; retired snapshots are forbidden in CI.
 
 ```sh
