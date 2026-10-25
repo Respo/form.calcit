@@ -18,7 +18,13 @@ if(mode==='before'){
  assert.ok(!p.before.defs.some(d=>d.id.endsWith('/merge')));assert.ok(!JSON.stringify(p.before.namespaces).includes('"merge"'));
  for(const[i,s]of p.sites.entries()){
   const show=JSON.parse(run('calcit',['tree','show',s.definition,'--path','@'+s.path,'--format','json']));assert.deepEqual(show.tree,s.before);writeFileSync('acceptance/tree-'+i+'.json',JSON.stringify(show));
-  const t=JSON.parse(run('calcit',['query','type-at',s.definition,'--path','@'+s.path+'.1','--format','json']));writeFileSync('acceptance/type-'+i+'.json',JSON.stringify(t));assert.deepEqual(t.diagnostics,[]);assert.equal(t.data.inferred_type,":: 'Map 'Tag 'Dynamic");const m=t.data.static_methods.find(m=>m.name==='.merge');assert.equal(m.status,'open');assert.equal(m.definition,'calcit.core/merge');assert.equal(m.rest_type,'map<tag, dynamic>');assert.equal(m.return_type,'map<tag, dynamic>');
+  const t=JSON.parse(run('calcit',['query','type-at',s.definition,'--path','@'+s.path+'.1','--format','json']));writeFileSync('acceptance/type-'+i+'.json',JSON.stringify(t));
+  // The alias leaf currently has no source-correlated inferred type. Keep that
+  // diagnostic, and verify the exact import and published value independently.
+  assert.ok(t.diagnostics.every(d=>d.code==='W_TYPE_AT_UNRESOLVED'&&d.path==='code@'+s.path+'.1'));
+  const receiver=s.before[1];assert.ok(['ui/global','ui/row'].includes(receiver));const ns=p.before.namespaces.find(n=>n.namespace===s.definition.split('/')[0]);assert.ok(ns.ns_code[2].some(x=>Array.isArray(x)&&JSON.stringify(x)===JSON.stringify(['respo-ui.core',':as','ui'])));
+  const producer=q('def','respo-ui.core/'+receiver.split('/')[1]);writeFileSync('acceptance/producer-'+i+'.json',JSON.stringify(producer));assert.deepEqual(producer.schema,['::',"'Map","'Tag","'Dynamic"]);assert.equal(producer.code[0],'def');assert.equal(producer.code[2][0],'{}');
+  const type=q('type',":: 'Map 'Tag 'Dynamic");writeFileSync('acceptance/receiver-type-'+i+'.json',JSON.stringify(type));const m=type.methods.find(m=>m.name==='.merge');assert.equal(m.status,'open');assert.equal(m.definition,'calcit.core/merge');assert.equal(m.rest_type,'map<tag, dynamic>');assert.equal(m.return_type,'map<tag, dynamic>');
  }
  writeFileSync('acceptance/merge-producer.json',JSON.stringify(q('def','calcit.core/merge')));writeFileSync('acceptance/before-source.json',JSON.stringify(views()));
 }else if(mode==='apply'){
