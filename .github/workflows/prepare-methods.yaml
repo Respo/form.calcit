@@ -1,0 +1,58 @@
+name: Prepare Form Map methods
+on:
+  push:
+    branches: [prepare/form-map-methods-0301]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6.5.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: |
+          corepack enable
+          corepack prepare yarn@4.18.0 --activate
+      - uses: calcit-lang/setup-calcit@v1.5.0
+        with:
+          tools: calcit,caps
+          caps-version: "0.1.1"
+          deps-file: deps.cirru
+      - name: Resolve original formal graph
+        run: |
+          set -euo pipefail
+          test "$(calcit -v)" = 0.30.1
+          caps --strict --ci
+          yarn install --immutable
+          caps verify --toolchain
+      - name: Verify complete original views and receiver ownership
+        run: node prepare-methods.mjs before
+      - name: All original gates before source migration
+        run: node prepare-methods.mjs gates before
+      - name: Official protected two-operation transaction
+        run: node prepare-methods.mjs apply
+      - name: All original gates after source migration
+        run: node prepare-methods.mjs gates after
+      - name: Verify complete result
+        run: node prepare-methods.mjs after
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: accepted-source
+          path: calcit.cirru
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: accepted-runtime
+          path: dist/
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: diagnostics
+          path: acceptance/
+          if-no-files-found: error
