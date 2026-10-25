@@ -16,7 +16,7 @@
                 store $ :store reel
                 states $ :states store
               div
-                {} $ :style $ merge ui/global ui/row
+                {} $ :style $ .merge ui/global ui/row
                 comp-form
                   decode-map-as (>> states :form-example) (:: 'Map 'Tag 'Dynamic)
                   , form-items ({})
@@ -399,7 +399,7 @@
                         item raw-item
                         item-value $ get state $ :name item
                       [] idx $ div
-                        {} $ :style $ merge ui/row
+                        {} $ :style $ .merge ui/row
                           {} $ :padding |8px
                         render-label item
                         match (:type item)
