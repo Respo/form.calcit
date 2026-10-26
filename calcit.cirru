@@ -453,19 +453,27 @@
             render-app!
             add-watch! *reel :changes $ fn (reel prev) (render-app!)
             listen-devtools! |k dispatch!
-            browser/set-before-unload! $ fn (event) (persist-storage!)
-            browser/set-interval! persist-storage! 60000
-            match
-              browser/storage-get $ :storage-key config/site
-              (:some raw)
-                match (try-parse-cirru-edn raw)
-                  (:ok parsed)
-                    match (types/decode-store parsed)
-                      (:some stored)
-                        dispatch! $ types/Op :hydrate-storage stored
-                      (:none) (hud! |error |Ignored_invalid_saved_state)
-                  (:err error) (hud! |error |Ignored_invalid_saved_state)
-              (:none) &unit
+            let
+                restored? $ match
+                  browser/storage-get $ :storage-key config/site
+                  (:some raw)
+                    match (try-parse-cirru-edn raw)
+                      (:ok parsed)
+                        match (types/decode-store parsed)
+                          (:some stored)
+                            do
+                              dispatch! $ types/Op :hydrate-storage stored
+                              , true
+                          (:none)
+                            do (hud! |error |Ignored_invalid_saved_state) false
+                      (:err error)
+                        do (hud! |error |Ignored_invalid_saved_state) false
+                  (:none) true
+              if restored?
+                do
+                  browser/set-before-unload! $ fn (event) (persist-storage!)
+                  browser/set-interval! persist-storage! 60000
+                , &unit
             println |App_started.
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
