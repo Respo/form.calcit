@@ -2,6 +2,16 @@
 Respo Form
 ----
 
+### 本轮 Map 方法写法迁移：使用者影响
+
+两处样式合并改用 Map 的 `.merge`，保留相同的参数顺序和右侧覆盖语义；
+表单字段、reset/Clear、自定义 renderer、派发与存档合同不变，消费者无需适配。
+工具链继续配对正式 Calcit / `@calcit/procs` `0.30.1`，本轮不改依赖或发布版本。
+开放 Map 类型仍然开放，不把方法写法迁移当作 Dynamic 债务清零。
+隔离官方 Linux CI 在修改前后执行原完整 strict、全量定义、原八项 Node 回归、
+文档、构建和 unsafe/dynamic-method/deprecated 零门禁，并比较全部生成模块字节。
+最终 PR CI 与预览状态以对应运行结果为准，不代表已合并、发版或部署生产。
+
 ### 当前源码：使用者需要注意
 
 本轮源码配对正式 Calcit / `@calcit/procs` `0.30.1`，并使用一致的

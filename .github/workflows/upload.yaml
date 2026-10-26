@@ -47,8 +47,7 @@ jobs:
         caps --strict --ci
         yarn install --immutable
         caps verify --toolchain
-        calcit calcit.cirru edit format
-        git diff --exit-code -- calcit.cirru
+        calcit calcit.cirru edit transaction --code '[["edit","format"]]' --dry-run --format json | jq -e '.changed == false'
         calcit fix --workflow strict --verify --format edn
         calcit calcit.cirru --check-only --all-defs --format json
         calcit calcit.cirru analyze weak-types --only unsafe-coerce --summary-only --format json | jq -e '.data.summary.hits == 0'
