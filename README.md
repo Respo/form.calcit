@@ -2,6 +2,21 @@
 Respo Form
 ----
 
+### 0.32.0 迁移候选：使用者影响
+
+CLI/procs 配对正式 0.32.0，需要重新安装模块、生成 JS 并刷新页面。
+Alerts 0.11.0、Reel 0.7.0、UI 0.9.0、Respo 0.17.0 当前使用本地候选，
+正式标签整图尚待验收；不发布 Form tag 或 npm，旧 0.0.5 内容不变。
+
+官方工具转换 25 处旧类型写法，39 个定义 schema 保持。选择/Clear 的 nil 语义、
+reset、自定义 renderer、一次派发、存档保护、HUD 和部署路径不变。
+保留原 strict、八项 Node 回归及 unsafe/dynamic-method/deprecated 零门禁，
+不新增脚本或放宽边界；npm 发布年龄门禁恢复为一小时。
+本轮全部定义、完整 strict、原八项 Node 回归、文档、构建和 immutable 安装通过；
+unsafe、dynamic-method、deprecated 均为零。实际字段输入、菜单选择、自定义
+计数器、提交数据和刷新恢复通过，浏览器无警告或错误，独立评审无待处理问题。
+正式依赖整图和远端 CI 尚待验收，下方历史结果不替代这两项检查。
+
 ### 0.31.0 候选：使用者影响
 
 CLI/procs 对齐正式 0.31.0；Alerts 0.11.0-alpha.3、Reel 0.7.0-alpha.4、
