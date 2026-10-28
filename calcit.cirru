@@ -6,7 +6,7 @@
     {} (:description |) (:init-fn 'form.main/main!) (:mode :js) (:reload-fn 'form.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |alerts.calcit/
-      :type-slots $ {}
+      :type-slots $ {} $ :dispatch-op |form.schema/DispatchOp
   :files $ {}
     'form.comp.container $ %{} 'FileEntry
       :defs $ {}
@@ -301,10 +301,14 @@
                             :args $ [] 'Dynamic
                             :return 'Unit
                         :return 'Unit
-                      modify-form! d! $ {}
-                        :name $ :name item
-                        :value $ if (nil? result) empty-selection $ match result
-                          (:item selected-value selected-label)
+                      if (nil? result)
+                        modify-form! d! $ {}
+                          :name $ :name item
+                          :value empty-selection
+                        modify-form! d! $ {}
+                          :name $ :name item
+                          :value $ match result $
+                            :item selected-value selected-label
                             {} (:value selected-value) (:display selected-label)
               div ({})
                 div
@@ -529,6 +533,10 @@
             respo.main :as respo-main
     'form.schema $ %{} 'FileEntry
       :defs $ {}
+        'DispatchOp $ %{} 'CodeEntry (:doc "|Respo 入口事件合同，容纳应用和 Reel 控制事件；代表值不发送。")
+          :code $ quote $ def DispatchOp (:: :unhandled)
+          :examples $ []
+          :schema $ :: 'Enum
         'FormItem $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct FormItem (:type 'Tag) (:name 'Tag) (:label 'String)
             :required? $ :: 'Option 'Bool
