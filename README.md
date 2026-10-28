@@ -2,6 +2,19 @@
 Respo Form
 ----
 
+### 0.31.0 候选：使用者影响
+
+CLI/procs 对齐正式 0.31.0；Alerts 0.11.0-alpha.3、Reel 0.7.0-alpha.4、
+UI 0.9.0-alpha.4、Respo 0.17.0-alpha.4 与传递 Router 0.9.0-alpha.3 是已发布的
+alpha 模块，JS FFI 为正式 0.2.7。消费者需协调这组依赖，不把 alpha 视为稳定版。
+本次不发布新 Form tag，旧版本的内容保持不变。
+
+选择菜单的 nil/选中值分支移到 `modify-form!` 调用外层，保留取消和 Clear 的 nil、
+选中对象结构、字段名及一次派发。绑定 Respo 的 Enum 入口，与原运行检查一致；
+不改变 Form 公共 schema、reset、自定义 renderer、存档保护、HUD 或部署路径。
+本地 CLI 使用已授权的固定官方 0.31.0，原完整 strict、全部定义、八项 Node 回归、
+文档及 unsafe/dynamic-method/deprecated 零门禁继续保留，不新增验证脚本或放宽预算。
+
 ### Demo 存档恢复失败时的行为
 
 如果 Demo 的原存档无法解析或不符合 store 形状，页面仍显示原来的
@@ -16,7 +29,7 @@ Respo Form
 原文。该验收不读取真实存档，也不代表所有历史存档均兼容。问题背景见
 [#18](https://github.com/Respo/form.calcit/issues/18)。
 
-### 本轮 Map 方法写法迁移：使用者影响
+### 0.30.1 历史 Map 方法迁移
 
 两处样式合并改用 Map 的 `.merge`，保留相同的参数顺序和右侧覆盖语义；
 表单字段、reset/Clear、自定义 renderer、派发与存档合同不变，消费者无需适配。
@@ -26,7 +39,7 @@ Respo Form
 文档、构建和 unsafe/dynamic-method/deprecated 零门禁，并比较全部生成模块字节。
 最终 PR CI 与预览状态以对应运行结果为准，不代表已合并、发版或部署生产。
 
-### 当前源码：使用者需要注意
+### 0.30.1 历史依赖迁移
 
 本轮源码配对正式 Calcit / `@calcit/procs` `0.30.1`，并使用一致的
 正式依赖图：Alerts `0.10.57`、Reel `0.6.41`、UI `0.8.0`、Respo `0.16.124`，
@@ -39,7 +52,7 @@ Respo Form
 直接落实 `unsafe=0` 硬门禁。27 项既有动态/空值边界保留，不把删除未使用的
 统计文件当作类型债务清零。
 
-正式图通过 Linux CI 验收，不使用本地旧 CLI 编译正式依赖图，不将单平台验收
+当时正式图通过 Linux CI 验收，不使用本地旧 CLI 编译正式依赖图，不将单平台验收
 当作完整跨平台兼容保证。旧 `0.0.5` tag 保持原内容；模块版本字段仍为 `0.0.5`，
 不把它冒充新的已发布升级。历史版本的迁移影响见下文。
 
@@ -162,7 +175,7 @@ comp-form (>> states :form-example) form-items ({})
 
 ### Workflow
 
-Current source: formal Calcit / `@calcit/procs` 0.30.1, Node.js 24, Yarn 4.18.0.
+Current source: formal Calcit / `@calcit/procs` 0.31.0, Node.js 24, Yarn 4.18.0.
 Only `calcit.cirru` and `deps.cirru` are maintained; retired snapshots are forbidden in CI.
 
 ```sh
