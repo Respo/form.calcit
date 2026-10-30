@@ -48,7 +48,7 @@ jobs:
         yarn install --immutable
         caps verify --toolchain
         calcit calcit.cirru edit transaction --code '[["edit","format"]]' --dry-run --format json | jq -e '.changed == false'
-        calcit fix --workflow strict --verify --format edn
+        calcit fix --workflow strict --verify --format json | jq -e '.data.workflow.status == "passed" and .diagnostics == []'
         calcit calcit.cirru --check-only --all-defs --format json
         calcit calcit.cirru analyze weak-types --only unsafe-coerce --summary-only --format json | jq -e '.data.summary.hits == 0'
         calcit calcit.cirru analyze weak-types --only dynamic-method --summary-only --format json | jq -e '.data.summary.findings == 0'
@@ -78,7 +78,7 @@ jobs:
 
     - name: Retain tested preview
       if: github.event_name == 'pull_request'
-      uses: actions/upload-artifact@v7.0.0
+      uses: actions/upload-artifact@v7.0.2
       with:
         name: form-preview
         path: dist/
@@ -104,7 +104,7 @@ jobs:
 
     - name: Upload and verify frontend assets on COS
       if: steps.cos-credentials.outputs.available == 'true'
-      uses: worktools/cos-upload-action@06d6027dcca6413c5936e04a9b6e9f0d5ef71ba0 # v1.2.0
+      uses: worktools/cos-upload-action@v1.2.0
       with:
         source-dir: dist
         bucket: ${{ secrets.COS_BUCKET }}
