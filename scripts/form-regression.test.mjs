@@ -7,6 +7,7 @@ import { store } from '../js-out/form.schema.mjs';
 import { decode_store } from '../js-out/form.types.mjs';
 import { updater } from '../js-out/form.updater.mjs';
 import { new_reel, record_op } from '../js-out/reel.typed.mjs';
+import { event__GT_edn } from '../js-out/respo.util.format.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
 import { component_$q_, component_tree, child_pair_value } from '../js-out/respo.util.detect.mjs';
 
@@ -15,6 +16,7 @@ const map = clt._$n__$M_;
 const list = clt._$L_;
 const nth = (value, index) => clt.option_$o_unwrap(clt.nth(value, index));
 const field = (value, key) => clt.option_$o_unwrap(clt.get(value, key));
+const inputEvent = value => event__GT_edn({ type: 'input', target: { value } });
 const cursor = list('form-test');
 const states = (data) => data === undefined ? map(t.cursor, cursor) : map(t.cursor, cursor, t.data, data);
 
@@ -54,14 +56,14 @@ test('input callback extracts text from the Respo event', () => {
     assert.equal(field(pairs, t.name), t.name);
     assert.equal(field(pairs, t.value), 'Alice');
   });
-  field(field(input, t.event), t.input)(map(t.value, 'Alice'), () => {});
+  field(field(input, t.event), t.input)(inputEvent('Alice'), () => {});
 });
 
 test('form edits dispatch one states Enum keyed by the actual field name', () => {
   const plugin = use_form(states(map(t.place, 'Shanghai')), list(nth(form_items, 0)));
   const callback = findEvent(form_plugin_render(plugin), t.input);
   assert.equal(typeof callback, 'function');
-  callback(map(t.value, 'Alice'), (...args) => {
+  callback(inputEvent('Alice'), (...args) => {
     assert.equal(args.length, 1);
     const op = args[0];
     assert.equal(clt._$n_enum_$o_nth(op, 0), t.states);
@@ -84,7 +86,7 @@ test('state operations survive updater and typed Reel replay into the rendered f
   const inputStates = map(t.cursor, list(t['form-example'], t.items));
   const plugin = use_form(inputStates, list(nth(form_items, 0)));
   let reel = new_reel(store);
-  findEvent(form_plugin_render(plugin), t.input)(map(t.value, 'Alice'), (op) => {
+  findEvent(form_plugin_render(plugin), t.input)(inputEvent('Alice'), (op) => {
     reel = record_op(updater, reel, op, 'input-op', 1);
   });
   assert.match(make_string(comp_container(reel)), /Alice/);
