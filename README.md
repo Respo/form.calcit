@@ -4,19 +4,13 @@ Respo Form
 
 ### 使用者影响
 
-CLI / `@calcit/procs` 配对正式 **0.32.1**，升级后重新安装整张依赖图、生成 JS 并
-完整刷新。使用已发布 Alerts **0.11.0-alpha.4**、Reel **0.7.0-alpha.5**、UI **0.9.0**、
-Respo **0.17.1**（传递 JS-FFI **0.2.9**）；仍含精确 alpha tag，不宣称整图全部稳定。
-本 PR 不发布 Form tag/npm、不移动旧 **0.0.5**，也不合并部署生产。
+CLI 与 `@calcit/procs` 均使用正式 **0.38.0**。升级后需要重新安装依赖并生成 JS。
+Alerts **0.14.2**、Reel **0.10.0**、UI **0.15.2**、Respo **0.19.5** 均使用正式标签。
 
-官方工具转换25处旧类型标注，39个定义schema保持。选择菜单的nil/选中值分支在
-修改调用外层，取消/Clear的nil、选中对象结构、字段名及一次派发保持。reset、自定义
-renderer、公开异构字段、Enum入口、HUD和部署路径不变，不新增强转、测试脚本或预算。
-原完整strict、八项Node回归、文档及unsafe/dynamic-method/deprecated零门禁保留。
-
-Caps strict/toolchain使用真实已发布图，npm等待为一小时，无单包例外。项目没有Git
-依赖，移除未使用的通配授权；原npm安装脚本策略保持。
-此前0.32.0候选已验收字段输入、选择、自定义计数器、提交和刷新恢复；本次未重跑浏览器。
+表单仍接受异构字段，选择与清除保留原 Map 和 nil 形状。插件的读取与重置方法
+共享表单值类型，重置回调接收具名操作，组件游标采用 Respo 的 `CoordKey`。
+Demo 内部用 union 区分表单操作与 Reel 控制。Calcit 0.38.0 中 `.get` 与内建 Enum 方法
+同名，读取表单请使用 `form.core/form-plugin-get`。HUD、存档键和前端部署路径保持。
 
 ### Demo 存档恢复失败
 
@@ -24,15 +18,12 @@ Caps strict/toolchain使用真实已发布图，npm等待为一小时，无单�
 不启用60秒定时保存和离页保存，后续编辑也不自动保存，避免默认状态覆盖原文。
 修复为有效存档后仍须重新启动，或在无存档状态重新启动，才恢复自动保存；同一失败会话不会因外部修复存档而重新注册保存。没有新增清空/修复按钮。
 无存档或恢复成功时保留原60秒周期、离页保存、key和序列化格式。
-此前隔离合成坏存档已验收启动、定时保存、离页及刷新后原文保留；本次未重复该验收，
-不宣称所有历史存档均兼容，背景见 [#18](https://github.com/Respo/form.calcit/issues/18)。
+坏存档保护的历史验收见 [#18](https://github.com/Respo/form.calcit/issues/18)。
 
 ### 公开边界
 
-字段名为Tag，值和renderer载荷允许异构数据；开放Map仍开放，不为清零伪造类型。
-renderer/修改函数参数顺序及真实 `Fn(Dynamic) -> Unit` dispatch合同保持；计数器先
-检查数值再递增。CI不读取的旧质量统计文件此前已退役，当前仍保留全部实际门禁及
-unsafe=0，不恢复无入口预算。项目没有附带native测试，不宣称native套件通过。
+字段名为 Tag，值和自定义 renderer 载荷可异构。renderer 和修改函数的参数顺序及回调合同沿用，
+计数器先检查数值再递增。保留完整 strict、原 Node 回归和零 unsafe、dynamic-method、deprecated 门禁。
 
 Demo http://repo.respo-mvc.org/form.calcit/ .
 
@@ -103,7 +94,7 @@ use-form (>> states :items) items
 
 ;; "returns current form data"
 
-.get form-plugin
+form.core/form-plugin-get form-plugin
 
 ;; "reset internal form data, defaults to empty hashmap"
 
