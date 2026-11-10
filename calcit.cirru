@@ -327,7 +327,7 @@
                       :font-style :italic
                 .render select-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List Dynamic) (Option Dynamic) form.schema/FormItem
+          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (Option Dynamic) form.schema/FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
@@ -365,13 +365,12 @@
                             , .unwrap
                           raise |invalid-form-field-name
                     d! $ form.types/Op :states cursor new-form
-                rendered $ list-> ({})
-                  map-indexed form-items $ fn (idx raw-item)
-                    hint-fn $ Fn Number form.schema/FormItem $ -> (List Dynamic)
+                rendered $ keyed-> ({})
+                  map-indexed form-items $ fn (idx item)
+                    hint-fn $ Fn Number form.schema/FormItem $ -> respo.schema/ChildPair
                     let
-                        item raw-item
                         item-value $ get state $ :name item
-                      [] idx $ div
+                      keyed-element idx $ div
                         {} $ :style $ .merge ui/row
                           {} $ :padding |8px
                         render-label item
@@ -389,7 +388,7 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.core
           :require
-            respo.core :refer $ defcomp >> list-> <> div button textarea span input event-value
+            respo.core :refer $ defcomp >> keyed-> keyed-element <> div button textarea span input event-value
             respo-ui.core :as ui
             respo-ui.core :refer $ hsl
             respo.comp.space :refer $ space-x
