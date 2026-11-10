@@ -4,12 +4,12 @@ Respo Form
 
 ### 使用者影响
 
-CLI 与 `@calcit/procs` 均使用正式 **0.40.0**。升级后需要重新安装依赖并生成 JS。
-Alerts **0.14.2**、Reel **0.10.0**、UI **0.15.2**、Respo **0.19.5** 均使用正式标签。
+CLI 与 `@calcit/procs` 均使用正式 **0.41.0**。升级后需要重新安装依赖并生成 JS。
+Alerts **0.14.3**、Reel **0.11.0**、UI **0.15.2**、Respo **0.19.5** 均使用正式标签。
 
 表单仍接受异构字段，选择与清除保留原 Map 和 nil 形状。插件的读取与重置方法
 共享表单值类型，重置回调接收具名操作，组件游标采用 Respo 的 `CoordKey`。
-Demo 内部用 union 区分表单操作与 Reel 控制。Calcit 0.38.0 中 `.get` 与内建 Enum 方法
+Demo 的表单派发绑定具名 `Op`，Reel 控件通过独立的 `Control` 回调派发，两类事件在内部用 union 汇合。Calcit 0.38.0 中 `.get` 与内建 Enum 方法
 同名，读取表单请使用 `form.core/form-plugin-get`。HUD、存档键和前端部署路径保持。
 
 ### Demo 存档恢复失败
