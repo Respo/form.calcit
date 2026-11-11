@@ -241,12 +241,13 @@
                   :name $ :name item
                   :value $ event-value e
           :examples $ []
-          :schema $ quote $ Fn Dynamic FormItem
+          :schema $ quote $ Fn V FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
               -> Unit
             -> respo.schema/Element
+            :generics V
         'render-label $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-label (item)
             div
@@ -384,8 +385,9 @@
                           _ $ <> $ str |Unknown_type_ (:type item)
               %form-plugin state rendered cursor
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List FormItem)
+          :schema $ quote $ Fn (Map Tag V) (List FormItem)
             -> $ FormPlugin Dynamic
+            :generics V
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.core
           :require
@@ -589,8 +591,9 @@
                 (:none) None
               , None
           :examples $ []
-          :schema $ quote $ Fn Dynamic
+          :schema $ quote $ Fn Raw
             -> $ Option Store
+            :generics Raw
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.types
     'form.updater $ %{} 'FileEntry
