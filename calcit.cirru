@@ -150,16 +150,16 @@
                   {} $ :style ui/row-center
                   button $ {} (:style ui/button) (:inner-text |Cancel)
                     :on-click $ fn (e d!)
-                      hint-fn $ Fn (Map Tag Dynamic)
-                        Fn Dynamic $ -> Unit
+                      hint-fn $ Fn respo.schema/RespoEvent
+                        Fn form.types/Op $ -> Unit
                         -> Unit
                       form-plugin-reset form-plugin d!
                       on-cancel
                   space-x 8
                   button $ {} (:style ui/button) (:inner-text |Submit)
                     :on-click $ fn (e d!)
-                      hint-fn $ Fn (Map Tag Dynamic)
-                        Fn Dynamic $ -> Unit
+                      hint-fn $ Fn respo.schema/RespoEvent
+                        Fn form.types/Op $ -> Unit
                         -> Unit
                       on-change $ form-plugin-get form-plugin
           :examples $ []
