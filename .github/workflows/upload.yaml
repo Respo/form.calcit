@@ -74,7 +74,7 @@ jobs:
         echo "base-url=${base_url}" >> "$GITHUB_OUTPUT"
         calcit calcit.cirru js
         yarn vite build --base="$base_url"
-        node --test scripts/form-regression.test.mjs
+        mode=dev node --test scripts/form-regression.test.mjs
 
     - name: Retain tested preview
       if: github.event_name == 'pull_request'

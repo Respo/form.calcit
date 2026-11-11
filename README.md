@@ -127,7 +127,7 @@ calcit calcit.cirru --check-only --all-defs
 calcit fix --workflow strict --verify
 calcit calcit.cirru js
 yarn vite build
-node --test scripts/form-regression.test.mjs
+mode=dev node --test scripts/form-regression.test.mjs
 ```
 
 CI uploads only frontend `dist` assets to COS, uses an absolute CDN base URL,
