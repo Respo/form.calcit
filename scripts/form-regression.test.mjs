@@ -6,9 +6,10 @@ import { form_items, comp_container } from '../js-out/form.comp.container.mjs';
 import { store } from '../js-out/form.schema.mjs';
 import { decode_store } from '../js-out/form.types.mjs';
 import { updater } from '../js-out/form.updater.mjs';
-import { new_reel, record_op } from '../js-out/reel.typed.mjs';
+import { Control, apply_control, new_reel, record_op } from '../js-out/reel.typed.mjs';
 import { event__GT_edn } from '../js-out/respo.util.format.mjs';
 import { make_string } from '../js-out/respo.render.html.mjs';
+import { with_memo_frame } from '../js-out/respo.memo.mjs';
 import { component_$q_, component_tree, child_pair_value } from '../js-out/respo.util.detect.mjs';
 
 const t = clt.init_tags(['cursor', 'data', 'states', 'name', 'place', 'value', 'event', 'input', 'click', 'tree', 'children', 'some', 'none', 'custom', 'form-example', 'items']);
@@ -89,7 +90,7 @@ test('state operations survive updater and typed Reel replay into the rendered f
   findEvent(form_plugin_render(plugin), t.input)(inputEvent('Alice'), (op) => {
     reel = record_op(updater, reel, op, 'input-op', 1);
   });
-  assert.match(make_string(comp_container(reel)), /Alice/);
+  assert.match(make_string(comp_container(reel, () => {})), /Alice/);
 });
 
 test('reset supports omitted and explicit Option data without changing cursor', () => {
@@ -126,7 +127,21 @@ test('Alerts menu item Enum is normalized to persisted selection data and Clear 
 });
 
 test('typed Reel demo renders and persisted store decoder rejects malformed data', () => {
-  assert.match(make_string(comp_container(new_reel(store))), /Submit/);
+  assert.match(make_string(comp_container(new_reel(store), () => {})), /Submit/);
   assert.equal(clt._$n_enum_$o_nth(decode_store(map(t.states, map())), 0), t.some);
   for (const invalid of [null, 1, map(), map(t.states, 1)]) assert.equal(clt._$n_enum_$o_nth(decode_store(invalid), 0), t.none);
+});
+
+test('Merge forwards the nominal Reel control to the container callback', () => {
+  const toggle = clt._PCT__$o__$o_(Control, clt.to_tag('toggle'));
+  const merge = clt._PCT__$o__$o_(Control, clt.to_tag('merge'));
+  const reel = apply_control(updater, new_reel(store), toggle);
+  const received = [];
+  const tree = with_memo_frame(() => comp_container(reel, control => received.push(control)));
+  const click = findEvent(tree, t.click, node => /<span[^>]*>Merge<\/span>/.test(make_string(node)));
+
+  assert.equal(typeof click, 'function');
+  click(null, () => assert.fail('Reel controls use the control callback'));
+  assert.equal(received.length, 1);
+  assert.equal(clt._$n__$e_(received[0], merge), true);
 });

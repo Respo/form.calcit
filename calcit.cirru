@@ -6,12 +6,12 @@
     {} (:description |) (:init-fn 'form.main/main!) (:mode :js) (:reload-fn 'form.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |reel.calcit/ |alerts.calcit/
-      :type-slots $ {} $ :dispatch-op 'form.schema/DispatchOp
+      :type-slots $ {} $ :dispatch-op 'form.types/Op
   :files $ {}
     'form.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defcomp comp-container (reel)
+          :code $ quote $ defcomp comp-container (reel on-control!)
             let
                 store $ :store reel
                 states $ :states store
@@ -21,19 +21,21 @@
                   decode-map-as (>> states :form-example) (Map Tag Dynamic)
                   , form-items ({})
                     fn (form) (println |form form)
-                    FormOptions :on-cancel $ Option :some $ fn () (println |cancel)
+                    FormOptions :on-cancel $ Some $ fn () (println |cancel)
                 if dev?
-                  Option :some $ comp-typed-reel (>> states :reel) reel $ {}
-                  Option :none
+                  Some $ comp-typed-reel (>> states :reel) reel ({}) on-control!
+                  , None
           :examples $ []
-          :schema $ quote $ Fn (reel.typed/State form.types/Op form.types/Store) (-> respo.schema/Component)
+          :schema $ quote $ Fn (reel.typed/State form.types/Op form.types/Store)
+            Fn reel.typed/Control $ -> Unit
+            -> respo.schema/Component
         'form-items $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def form-items
             []
-              FormItem :type :input :name :name :label |Name :required? (Option :some true) :placeholder (Option :some "|a name") :options (Option :none) :render $ Option :none
-              FormItem :type :input :name :place :label |Place :required? (Option :none) :placeholder (Option :some "|a place") :options (Option :none) :render $ Option :none
-              FormItem :type :select-popup :name :kind :label |Kind :required? (Option :none) :placeholder (Option :some "|Nothing selected") :render (Option :none) :options $ Option :some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
-              FormItem :type :custom :name :custom :label |Counter :required? (Option :none) :placeholder (Option :none) :options (Option :none) :render $ Option :some $ fn (value item modify-form! state)
+              FormItem :type :input :name :name :label |Name :required? (Some true) :placeholder (Some "|a name") :options None :render None
+              FormItem :type :input :name :place :label |Place :required? None :placeholder (Some "|a place") :options None :render None
+              FormItem :type :select-popup :name :kind :label |Kind :required? None :placeholder (Some "|Nothing selected") :render None :options $ Some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
+              FormItem :type :custom :name :custom :label |Counter :required? None :placeholder None :options None :render $ Some $ fn (value item modify-form! state)
                 hint-fn $ Fn Dynamic form.schema/FormItem
                   Fn
                     Fn Dynamic $ -> Unit
@@ -58,7 +60,7 @@
                             if (number? counter) (inc counter) (raise |invalid-counter-value)
                     <> $ str $ or value 0
           :examples $ []
-          :schema $ quote $ List form.schema/FormItem
+          :schema $ quote $ List FormItem
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.comp.container
           :require (respo-ui.core :as ui)
@@ -90,7 +92,7 @@
           :code $ quote $ defn %form-plugin (state rendered cursor) (FormPlugin :form state rendered cursor)
           :examples $ []
           :schema $ quote $ Fn (Map Tag T) respo.schema/Element (List respo.schema/CoordKey)
-            -> $ form.core/FormPlugin T
+            -> $ FormPlugin T
             :generics T
         'FormPlugin $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def FormPlugin (impl-traits FormPlugin0 FormPluginImpl)
@@ -148,22 +150,22 @@
                   {} $ :style ui/row-center
                   button $ {} (:style ui/button) (:inner-text |Cancel)
                     :on-click $ fn (e d!)
-                      hint-fn $ Fn (Map Tag Dynamic)
-                        Fn Dynamic $ -> Unit
+                      hint-fn $ Fn respo.schema/RespoEvent
+                        Fn form.types/Op $ -> Unit
                         -> Unit
                       form-plugin-reset form-plugin d!
                       on-cancel
                   space-x 8
                   button $ {} (:style ui/button) (:inner-text |Submit)
                     :on-click $ fn (e d!)
-                      hint-fn $ Fn (Map Tag Dynamic)
-                        Fn Dynamic $ -> Unit
+                      hint-fn $ Fn respo.schema/RespoEvent
+                        Fn form.types/Op $ -> Unit
                         -> Unit
                       on-change $ form-plugin-get form-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List form.schema/FormItem) (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map Tag Dynamic) (List FormItem) (Map Tag Dynamic)
             Fn (Map Tag Dynamic) (-> Unit)
-            , form.schema/FormOptions (-> respo.schema/Component)
+            , FormOptions (-> respo.schema/Component)
         'css-close-icon $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-close-icon
             {}
@@ -177,7 +179,7 @@
               (:form state rendered cursor) state
               _ $ raise |Invalid-form-plugin
           :examples $ []
-          :schema $ quote $ Fn (form.core/FormPlugin T)
+          :schema $ quote $ Fn (FormPlugin T)
             -> $ Map Tag T
             :generics T
         'form-plugin-render $ %{} 'CodeEntry (:doc |)
@@ -186,7 +188,7 @@
               (:form state rendered cursor) rendered
               _ $ raise |Invalid-form-plugin
           :examples $ []
-          :schema $ quote $ Fn (form.core/FormPlugin T) (-> respo.schema/Element) (:generics T)
+          :schema $ quote $ Fn (FormPlugin T) (-> respo.schema/Element) (:generics T)
         'form-plugin-reset $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn form-plugin-reset (self d! data)
             match self
@@ -194,7 +196,7 @@
                 d! $ form.types/Op :states cursor $ data .unwrap-or ({})
               _ $ raise |Invalid-form-plugin
           :examples $ []
-          :schema $ quote $ Fn (form.core/FormPlugin T)
+          :schema $ quote $ Fn (FormPlugin T)
             Fn form.types/Op $ -> Unit
             Option $ Map Tag T
             -> Unit
@@ -218,7 +220,7 @@
                     div ({}) (<> |Missing-custom-renderer)
               render value item modify-form! state
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) form.schema/FormItem
+          :schema $ quote $ Fn (Map Tag Dynamic) FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
@@ -239,7 +241,7 @@
                   :name $ :name item
                   :value $ event-value e
           :examples $ []
-          :schema $ quote $ Fn Dynamic form.schema/FormItem
+          :schema $ quote $ Fn Dynamic FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
@@ -253,10 +255,10 @@
               if
                   :required? item
                   , .unwrap-or false
-                Option :some $ <> |* $ {}
-                Option :none
+                Some $ <> |* $ {}
+                , None
           :examples $ []
-          :schema $ quote $ Fn form.schema/FormItem (-> respo.schema/Element)
+          :schema $ quote $ Fn FormItem (-> respo.schema/Element)
         'render-select-popup $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-select-popup (states cursor value item modify-form!)
             let
@@ -274,8 +276,7 @@
                 empty-selection nil
                 selected $ value .and-then $ fn (raw)
                   hint-fn $ Fn Dynamic $ -> (Option form.schema/SelectedOption)
-                  if (nil? raw) (Option :none)
-                    Option :some $ decode-map-as raw 'form.schema/SelectedOption
+                  if (nil? raw) None $ Some $ decode-map-as raw 'form.schema/SelectedOption
                 select-plugin $ use-modal-menu (>> states :select)
                   {} (:title |Select) (:items options)
                     :on-result $ fn (result d!)
@@ -327,7 +328,7 @@
                       :font-style :italic
                 .render select-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List Dynamic) (Option Dynamic) form.schema/FormItem
+          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (Option Dynamic) FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
@@ -365,13 +366,12 @@
                             , .unwrap
                           raise |invalid-form-field-name
                     d! $ form.types/Op :states cursor new-form
-                rendered $ list-> ({})
-                  map-indexed form-items $ fn (idx raw-item)
-                    hint-fn $ Fn Number form.schema/FormItem $ -> (List Dynamic)
+                rendered $ keyed-> ({})
+                  map-indexed form-items $ fn (idx item)
+                    hint-fn $ Fn Number form.schema/FormItem $ -> respo.schema/ChildPair
                     let
-                        item raw-item
                         item-value $ get state $ :name item
-                      [] idx $ div
+                      keyed-element idx $ div
                         {} $ :style $ .merge ui/row
                           {} $ :padding |8px
                         render-label item
@@ -384,12 +384,12 @@
                           _ $ <> $ str |Unknown_type_ (:type item)
               %form-plugin state rendered cursor
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List form.schema/FormItem)
-            -> $ form.core/FormPlugin Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (List FormItem)
+            -> $ FormPlugin Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.core
           :require
-            respo.core :refer $ defcomp >> list-> <> div button textarea span input event-value
+            respo.core :refer $ defcomp >> keyed-> keyed-element <> div button textarea span input event-value
             respo-ui.core :as ui
             respo-ui.core :refer $ hsl
             respo.comp.space :refer $ space-x
@@ -401,7 +401,7 @@
         '*reel $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *reel (typed/new-reel schema/store)
           :examples $ []
-          :schema $ quote $ Ref (reel.typed/State form.types/Op form.types/Store)
+          :schema $ quote $ Ref (typed/State types/Op types/Store)
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             when config/dev? $ js/console.log |Dispatch: op
@@ -412,22 +412,19 @@
                   :timestamp $ shared/date-now-snapshot
             , &unit
           :examples $ []
-          :schema $ quote $ Fn form.types/DemoOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn types/DemoOp (-> Unit) (:features :js-ffi)
         'dispatch-from-view! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-from-view! (raw)
-            match (typed/decode-control raw)
-              (:some action) (dispatch! action)
-              (:none)
-                dispatch! $ types/decode-op raw
+            dispatch! $ types/decode-op raw
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :reflect)
+          :schema $ quote $ Fn types/Op (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println |Running_mode: $ if config/dev? |dev |release
             if config/dev? $ load-console-formatter!
             render-app!
             add-watch! *reel :changes $ fn (reel prev) (render-app!)
-            listen-devtools-toggle! |k $ fn () $ dispatch! (typed/Control :toggle)
+            listen-devtools-toggle! |k $ fn () $ on-control! (typed/Control :toggle)
             let
                 restored? $ match
                   browser/storage-get $ :storage-key config/site
@@ -456,6 +453,10 @@
           :code $ quote $ def mount-target respo-main/mount-target
           :examples $ []
           :schema $ quote $ JsNullish respo.dom/DomElement
+        'on-control! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn on-control! (control) (dispatch! control)
+          :examples $ []
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
@@ -476,7 +477,7 @@
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
-              fn () $ comp-container @*reel
+              fn () $ comp-container @*reel on-control!
               , dispatch-from-view!
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
@@ -498,10 +499,6 @@
             respo.main :as respo-main
     'form.schema $ %{} 'FileEntry
       :defs $ {}
-        'DispatchOp $ %{} 'CodeEntry (:doc "|Respo 入口事件合同，容纳应用和 Reel 控制事件；代表值不发送。")
-          :code $ quote $ def DispatchOp (:: :unhandled)
-          :examples $ []
-          :schema $ quote AnyEnum
         'FormItem $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct FormItem (:type Tag) (:name Tag) (:label String)
             :required? $ Option Bool
@@ -579,7 +576,7 @@
                 _ $ raise |unknown-form-action
               raise |expected-form-action
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> form.types/Op)
+          :schema $ quote $ Fn Dynamic (-> Op)
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
@@ -587,13 +584,13 @@
               match (get data :states)
                 (:some states)
                   if (map? states)
-                    Option :some $ Store :states $ assert-type states 'Map
-                    Option :none
-                (:none) (Option :none)
-              Option :none
+                    Some $ Store :states $ assert-type states Map
+                    , None
+                (:none) None
+              , None
           :examples $ []
           :schema $ quote $ Fn Dynamic
-            -> $ Option form.types/Store
+            -> $ Option Store
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.types
     'form.updater $ %{} 'FileEntry
