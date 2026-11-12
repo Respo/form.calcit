@@ -36,7 +36,7 @@
               FormItem :type :input :name :place :label |Place :required? None :placeholder (Some "|a place") :options None :render None
               FormItem :type :select-popup :name :kind :label |Kind :required? None :placeholder (Some "|Nothing selected") :render None :options $ Some $ [] (FormOption :value :a :title |A) (FormOption :value :b :title |B)
               FormItem :type :custom :name :custom :label |Counter :required? None :placeholder None :options None :render $ Some $ fn (value item modify-form! state)
-                hint-fn $ Fn Dynamic form.schema/FormItem
+                hint-fn $ Fn Dynamic FormItem
                   Fn
                     Fn Dynamic $ -> Unit
                     Map Tag Dynamic
@@ -99,7 +99,7 @@
           :examples $ []
           :schema $ quote EnumDef
         'FormPlugin0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum FormPlugin0 ([] T)
+          :code $ quote $ defenum FormPlugin0 (:generics T)
             :form (Map Tag T) respo.schema/Element $ List respo.schema/CoordKey
           :examples $ []
           :schema $ quote EnumDef
@@ -210,7 +210,7 @@
                 render $
                   :render item
                   , .unwrap-or $ fn (value item modify-form! state)
-                    hint-fn $ Fn Dynamic form.schema/FormItem
+                    hint-fn $ Fn Dynamic FormItem
                       Fn
                         Fn Dynamic $ -> Unit
                         Map Tag Dynamic
@@ -267,7 +267,7 @@
                     :options item
                     , .unwrap-or $ []
                   map $ fn (option)
-                    hint-fn $ Fn form.schema/FormOption $ -> form.core/MenuItem
+                    hint-fn $ Fn FormOption $ -> MenuItem
                     let
                         typed-option option
                       MenuItem :item (:value typed-option) (:title typed-option)
@@ -276,7 +276,7 @@
                   , .unwrap-or "|To select..."
                 empty-selection nil
                 selected $ value .and-then $ fn (raw)
-                  hint-fn $ Fn Dynamic $ -> (Option form.schema/SelectedOption)
+                  hint-fn $ Fn Dynamic $ -> (Option SelectedOption)
                   if (nil? raw) None $ Some $ decode-map-as raw 'form.schema/SelectedOption
                 select-plugin $ use-modal-menu (>> states :select)
                   {} (:title |Select) (:items options)
@@ -369,7 +369,7 @@
                     d! $ form.types/Op :states cursor new-form
                 rendered $ keyed-> ({})
                   map-indexed form-items $ fn (idx item)
-                    hint-fn $ Fn Number form.schema/FormItem $ -> respo.schema/ChildPair
+                    hint-fn $ Fn Number FormItem $ -> respo.schema/ChildPair
                     let
                         item-value $ get state $ :name item
                       keyed-element idx $ div
