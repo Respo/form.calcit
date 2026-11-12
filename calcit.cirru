@@ -29,6 +29,7 @@
           :schema $ quote $ Fn (reel.typed/State form.types/Op form.types/Store)
             Fn reel.typed/Control $ -> Unit
             -> respo.schema/Component
+            :features :io
         'form-items $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def form-items
             []
@@ -261,7 +262,7 @@
           :examples $ []
           :schema $ quote $ Fn FormItem (-> respo.schema/Element)
         'render-select-popup $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render-select-popup (states cursor value item modify-form!)
+          :code $ quote $ defn render-select-popup (states cursor selected item modify-form!)
             let
                 options $ ->
                     :options item
@@ -275,9 +276,6 @@
                   :placeholder item
                   , .unwrap-or "|To select..."
                 empty-selection nil
-                selected $ value .and-then $ fn (raw)
-                  hint-fn $ Fn Dynamic $ -> (Option SelectedOption)
-                  if (nil? raw) None $ Some $ decode-map-as raw 'form.schema/SelectedOption
                 select-plugin $ use-modal-menu (>> states :select)
                   {} (:title |Select) (:items options)
                     :on-result $ fn (result d!)
@@ -329,7 +327,7 @@
                       :font-style :italic
                 .render select-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (Option Dynamic) FormItem
+          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (Option SelectedOption) FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
@@ -380,7 +378,12 @@
                           :input $ render-input
                             if-let (value item-value) value nil
                             , item modify-form!
-                          :select-popup $ render-select-popup states cursor item-value item modify-form!
+                          :select-popup $ let
+                              selected $ match item-value
+                                (:none) None
+                                (:some raw)
+                                  if (nil? raw) None $ Some $ decode-map-as raw 'form.schema/SelectedOption
+                            render-select-popup states cursor selected item modify-form!
                           :custom $ render-custom state item modify-form!
                           _ $ <> $ str |Unknown_type_ (:type item)
               %form-plugin state rendered cursor
@@ -414,12 +417,12 @@
                   :timestamp $ shared/date-now-snapshot
             , &unit
           :examples $ []
-          :schema $ quote $ Fn types/DemoOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn types/DemoOp (-> Unit) (:features :js-ffi :state)
         'dispatch-from-view! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch-from-view! (raw)
             dispatch! $ types/decode-op raw
           :examples $ []
-          :schema $ quote $ Fn types/Op (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn types/Op (-> Unit) (:features :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             println |Running_mode: $ if config/dev? |dev |release
@@ -450,7 +453,7 @@
                 , &unit
             println |App_started.
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'mount-target $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def mount-target respo-main/mount-target
           :examples $ []
@@ -458,13 +461,13 @@
         'on-control! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn on-control! (control) (dispatch! control)
           :examples $ []
-          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn typed/Control (-> Unit) (:features :js-ffi :state)
         'persist-storage! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn persist-storage! ()
             browser/storage-set! (:storage-key config/site)
               format-cirru-edn $ :store @*reel
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -475,14 +478,14 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render-with! mount-target
               fn () $ comp-container @*reel on-control!
               , dispatch-from-view!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns form.main
           :require
