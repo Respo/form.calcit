@@ -327,12 +327,13 @@
                       :font-style :italic
                 .render select-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (Option SelectedOption) FormItem
+          :schema $ quote $ Fn (Map Tag V) (List respo.schema/CoordKey) (Option SelectedOption) FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
               -> Unit
             -> respo.schema/Element
+            :generics V
         'use-form $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-form (states form-items)
             let
@@ -581,7 +582,7 @@
                 _ $ raise |unknown-form-action
               raise |expected-form-action
           :examples $ []
-          :schema $ quote $ Fn Dynamic (-> Op)
+          :schema $ quote $ Fn Input (-> Op) (:generics Input)
         'decode-store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn decode-store (data)
             if
