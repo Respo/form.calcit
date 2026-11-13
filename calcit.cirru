@@ -327,12 +327,13 @@
                       :font-style :italic
                 .render select-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List respo.schema/CoordKey) (Option SelectedOption) FormItem
+          :schema $ quote $ Fn (Map Tag V) (List respo.schema/CoordKey) (Option SelectedOption) FormItem
             Fn
               Fn Dynamic $ -> Unit
               Map Tag Dynamic
               -> Unit
             -> respo.schema/Element
+            :generics V
         'use-form $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn use-form (states form-items)
             let
