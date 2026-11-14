@@ -51,7 +51,7 @@
                       :style $ {} (:cursor :pointer) (:padding "|0px 8px")
                         :background-color $ hsl 0 0 90
                       :on-click $ fn (e d!)
-                        hint-fn $ Fn (Map Tag Dynamic)
+                        hint-fn $ Fn respo.schema/RespoEvent
                           Fn form.types/Op $ -> Unit
                           -> Unit
                         modify-form! d! $ {}
@@ -301,7 +301,7 @@
                       :display :inline-block
                       :min-width 80
                     :on-click $ fn (e d!)
-                      hint-fn $ Fn (Map Tag Dynamic)
+                      hint-fn $ Fn respo.schema/RespoEvent
                         Fn form.types/Op $ -> Unit
                         -> Unit
                       .show select-plugin d!
@@ -315,7 +315,7 @@
                         space-x 8
                         span $ {} (:inner-text "|⨉") (:class-name css-close-icon)
                           :on-click $ fn (e d!)
-                            hint-fn $ Fn (Map Tag Dynamic)
+                            hint-fn $ Fn respo.schema/RespoEvent
                               Fn form.types/Op $ -> Unit
                               -> Unit
                             modify-form! d! $ {}
