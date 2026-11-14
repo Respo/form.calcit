@@ -164,9 +164,9 @@
                         -> Unit
                       on-change $ form-plugin-get form-plugin
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (List FormItem) (Map Tag Dynamic)
+          :schema $ quote $ Fn (Map Tag State) (List FormItem) (Map Tag Dynamic)
             Fn (Map Tag Dynamic) (-> Unit)
-            , FormOptions (-> respo.schema/Component)
+            , FormOptions (-> respo.schema/Component) (:generics State)
         'css-close-icon $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstyle css-close-icon
             {}
