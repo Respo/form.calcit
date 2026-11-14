@@ -282,15 +282,16 @@
                       hint-fn $ Fn Dynamic
                         Fn form.types/Op $ -> Unit
                         -> Unit
-                      if (nil? result)
+                      let
+                          selection $ if (nil? result) None $ Some (decode-map-as result MenuItem)
                         modify-form! d! $ {}
                           :name $ :name item
-                          :value empty-selection
-                        modify-form! d! $ {}
-                          :name $ :name item
-                          :value $ match result $
-                            :item selected-value selected-label
-                            {} (:value selected-value) (:display selected-label)
+                          :value $ match selection
+                            (:none) empty-selection
+                            (:some chosen)
+                              match chosen $
+                                :item selected-value selected-label
+                                {} (:value selected-value) (:display selected-label)
               div ({})
                 div
                   {}
