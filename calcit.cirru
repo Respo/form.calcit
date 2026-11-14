@@ -39,7 +39,7 @@
               FormItem :type :custom :name :custom :label |Counter :required? None :placeholder None :options None :render $ Some $ fn (value item modify-form! state)
                 hint-fn $ Fn Dynamic FormItem
                   Fn
-                    Fn Dynamic $ -> Unit
+                    Fn form.types/Op $ -> Unit
                     Map Tag Dynamic
                     -> Unit
                   Map Tag Dynamic
@@ -51,8 +51,8 @@
                       :style $ {} (:cursor :pointer) (:padding "|0px 8px")
                         :background-color $ hsl 0 0 90
                       :on-click $ fn (e d!)
-                        hint-fn $ Fn (Map Tag Dynamic)
-                          Fn Dynamic $ -> Unit
+                        hint-fn $ Fn respo.schema/RespoEvent
+                          Fn form.types/Op $ -> Unit
                           -> Unit
                         modify-form! d! $ {}
                           :name $ :name typed-item
@@ -213,7 +213,7 @@
                   , .unwrap-or $ fn (value item modify-form! state)
                     hint-fn $ Fn Dynamic FormItem
                       Fn
-                        Fn Dynamic $ -> Unit
+                        Fn form.types/Op $ -> Unit
                         Map Tag Dynamic
                         -> Unit
                       Map Tag Dynamic
@@ -223,7 +223,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag Dynamic) FormItem
             Fn
-              Fn Dynamic $ -> Unit
+              Fn form.types/Op $ -> Unit
               Map Tag Dynamic
               -> Unit
             -> respo.schema/Element
@@ -236,7 +236,7 @@
               :value value
               :on-input $ fn (e d!)
                 hint-fn $ Fn respo.schema/RespoEvent
-                  Fn Dynamic $ -> Unit
+                  Fn form.types/Op $ -> Unit
                   -> Unit
                 modify-form! d! $ {}
                   :name $ :name item
@@ -244,7 +244,7 @@
           :examples $ []
           :schema $ quote $ Fn V FormItem
             Fn
-              Fn Dynamic $ -> Unit
+              Fn form.types/Op $ -> Unit
               Map Tag Dynamic
               -> Unit
             -> respo.schema/Element
@@ -280,17 +280,18 @@
                   {} (:title |Select) (:items options)
                     :on-result $ fn (result d!)
                       hint-fn $ Fn Dynamic
-                        Fn Dynamic $ -> Unit
+                        Fn form.types/Op $ -> Unit
                         -> Unit
-                      if (nil? result)
+                      let
+                          selection $ if (nil? result) None $ Some (decode-map-as result MenuItem)
                         modify-form! d! $ {}
                           :name $ :name item
-                          :value empty-selection
-                        modify-form! d! $ {}
-                          :name $ :name item
-                          :value $ match result $
-                            :item selected-value selected-label
-                            {} (:value selected-value) (:display selected-label)
+                          :value $ match selection
+                            (:none) empty-selection
+                            (:some chosen)
+                              match chosen $
+                                :item selected-value selected-label
+                                {} (:value selected-value) (:display selected-label)
               div ({})
                 div
                   {}
@@ -301,8 +302,8 @@
                       :display :inline-block
                       :min-width 80
                     :on-click $ fn (e d!)
-                      hint-fn $ Fn (Map Tag Dynamic)
-                        Fn Dynamic $ -> Unit
+                      hint-fn $ Fn respo.schema/RespoEvent
+                        Fn form.types/Op $ -> Unit
                         -> Unit
                       .show select-plugin d!
                       , &unit
@@ -315,8 +316,8 @@
                         space-x 8
                         span $ {} (:inner-text "|⨉") (:class-name css-close-icon)
                           :on-click $ fn (e d!)
-                            hint-fn $ Fn (Map Tag Dynamic)
-                              Fn Dynamic $ -> Unit
+                            hint-fn $ Fn respo.schema/RespoEvent
+                              Fn form.types/Op $ -> Unit
                               -> Unit
                             modify-form! d! $ {}
                               :name $ :name item
@@ -329,7 +330,7 @@
           :examples $ []
           :schema $ quote $ Fn (Map Tag V) (List respo.schema/CoordKey) (Option SelectedOption) FormItem
             Fn
-              Fn Dynamic $ -> Unit
+              Fn form.types/Op $ -> Unit
               Map Tag Dynamic
               -> Unit
             -> respo.schema/Element
@@ -352,7 +353,7 @@
                   , .unwrap-or $ {}
                 modify-form! $ fn (d! pairs)
                   hint-fn $ Fn
-                    Fn Dynamic $ -> Unit
+                    Fn form.types/Op $ -> Unit
                     Map Tag Dynamic
                     -> Unit
                   let
@@ -512,7 +513,7 @@
             :options $ Option $ List form.schema/FormOption
             :render $ Option $ Fn Dynamic form.schema/FormItem
               Fn
-                Fn Dynamic $ -> Unit
+                Fn form.types/Op $ -> Unit
                 Map Tag Dynamic
                 -> Unit
               Map Tag Dynamic
