@@ -74,6 +74,7 @@ jobs:
         echo "base-url=${base_url}" >> "$GITHUB_OUTPUT"
         calcit calcit.cirru js
         yarn vite build --base="$base_url"
+        calcit --reload-fn respo.render.html/make-string js
         mode=dev node --test scripts/form-regression.test.mjs
 
     - name: Retain tested preview
