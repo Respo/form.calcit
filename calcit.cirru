@@ -27,9 +27,9 @@
                   , None
           :examples $ []
           :schema $ quote $ Fn (reel.typed/State form.types/Op form.types/Store)
-            Fn reel.typed/Control $ -> Unit
+            Fn reel.typed/Control (-> Unit) (:features :state)
             -> respo.schema/Component
-            :features :io
+            :features :io :state
         'form-items $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def form-items
             []
@@ -96,25 +96,25 @@
             -> $ FormPlugin T
             :generics T
         'FormPlugin $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def FormPlugin (impl-traits FormPlugin0 FormPluginImpl)
-          :examples $ []
-          :schema $ quote EnumDef
-        'FormPlugin0 $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum FormPlugin0 (:generics T)
+          :code $ quote $ defenum FormPlugin (:generics T) (:impls FormPluginTrait)
             :form (Map Tag T) respo.schema/Element $ List respo.schema/CoordKey
           :examples $ []
           :schema $ quote EnumDef
+        'FormPlugin0 $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ def FormPlugin0 FormPlugin
+          :examples $ []
+          :schema $ quote EnumDef
         'FormPluginImpl $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defimpl FormPluginImpl FormPluginTrait (.get form-plugin-get) (.render form-plugin-render) (.reset form-plugin-reset)
+          :code $ quote $ defimpl FormPlugin FormPluginTrait (.get form-plugin-get) (.render form-plugin-render) (.reset form-plugin-reset)
           :examples $ []
           :schema $ quote Impl
         'FormPluginTrait $ %{} 'CodeEntry (:doc |)
           :code $ quote $ deftrait FormPluginTrait
-            .get $ Fn (form.core/FormPlugin0 T)
+            .get $ Fn (form.core/FormPlugin T)
               -> $ Map Tag T
               :generics T
-            .render $ Fn (form.core/FormPlugin0 T) (-> respo.schema/Element) (:generics T)
-            .reset $ Fn (form.core/FormPlugin0 T)
+            .render $ Fn (form.core/FormPlugin T) (-> respo.schema/Element) (:generics T)
+            .reset $ Fn (form.core/FormPlugin T)
               Fn form.types/Op $ -> Unit
               Option $ Map Tag T
               -> Unit
