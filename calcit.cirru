@@ -121,6 +121,10 @@
               :generics T
           :examples $ []
           :schema $ quote Trait
+        'InputUpdateValue $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defunion InputUpdateValue String Tag
+          :examples $ []
+          :schema $ quote UnionDef
         'MenuItem $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum MenuItem (:item Tag String)
           :examples $ []
@@ -245,7 +249,7 @@
           :schema $ quote $ Fn V FormItem
             Fn
               Fn form.types/Op $ -> Unit
-              Map Tag Dynamic
+              Map Tag InputUpdateValue
               -> Unit
             -> respo.schema/Element
             :generics V
